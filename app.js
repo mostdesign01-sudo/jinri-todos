@@ -1,3 +1,4 @@
+(function (root) {
 const STORAGE_KEY = "jinri-todos-v1";
 const DATA_VERSION = 2;
 const TZ = "Asia/Shanghai";
@@ -379,5 +380,6 @@ const JinriAPI = {
   priorityLabel,
 };
 
-if (typeof window !== "undefined") window.Jinri = JinriAPI;
+root.Jinri = JinriAPI;
 if (typeof module !== "undefined" && module.exports) module.exports = JinriAPI;
+})(typeof window !== "undefined" ? window : globalThis);

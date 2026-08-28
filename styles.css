@@ -372,6 +372,7 @@ h1 {
   gap: 6px;
 }
 .btn:hover { background: rgba(255,255,255,0.08); }
+[hidden] { display: none !important; }
 .hint { margin-left: auto; color: var(--muted); font-size: 12px; }
 
 .empty {
