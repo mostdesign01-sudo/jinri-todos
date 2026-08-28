@@ -1,0 +1,14 @@
+{
+  "name": "今日待办",
+  "short_name": "今日待办",
+  "description": "带优先级的每日待办，手机和桌面都能用",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0d12",
+  "theme_color": "#0b0d12",
+  "lang": "zh-CN",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}

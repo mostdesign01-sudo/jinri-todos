@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d12" />
+  <title>今日待办 · 悬浮窗</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="overlay.css" />
+</head>
+<body class="overlay">
+  <div class="widget">
+    <div class="drag-handle" title="拖动"><i></i></div>
+    <div class="widget-body">
+      <div class="overlay-head">
+        <h1>今日待办</h1>
+        <div class="remain" id="remain"></div>
+      </div>
+      <form class="add-row" id="add-form" autocomplete="off">
+        <div class="prios" id="prios"></div>
+        <input id="title-input" class="title-input" name="title" maxlength="120" placeholder="回车添加" />
+      </form>
+      <div class="list" id="list"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    const { PRIORITIES } = Jinri;
+    let addPriority = "medium";
+
+    function drawPrios() {
+      const root = document.getElementById("prios");
+      root.innerHTML = PRIORITIES.map((p) =>
+        `<button type="button" class="prio-btn${p.id === addPriority ? " on" : ""}" data-p="${p.id}">${p.label}</button>`
+      ).join("");
+      root.querySelectorAll(".prio-btn").forEach((btn) => {
+        btn.addEventListener("click", () => { addPriority = btn.dataset.p; drawPrios(); });
+      });
+    }
+
+    function render() {
+      const items = Jinri.sortTodos(Jinri.load().todos, false);
+      const n = items.length;
+      document.getElementById("remain").textContent = n ? `还有${n}件` : "都做完了";
+      const list = document.getElementById("list");
+      if (!n) {
+        list.innerHTML = `<div class="empty">空空的一天。</div>`;
+      } else {
+        list.innerHTML = items.map((t) => `
+          <article class="item" data-p="${t.priority}" data-id="${t.id}">
+            <button class="check" type="button" aria-label="完成" data-act="toggle"></button>
+            <div class="mid">
+              <div class="meta"><span class="tag">${Jinri.priorityLabel(t.priority)}</span>${t.sample ? `<span>示例</span>` : ""}</div>
+              <div class="title">${escapeHtml(t.title)}</div>
+            </div>
+          </article>
+        `).join("");
+      }
+      drawPrios();
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    document.getElementById("add-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("title-input");
+      Jinri.addTodo(input.value, addPriority);
+      input.value = "";
+      render();
+    });
+
+    document.getElementById("list").addEventListener("click", (e) => {
+      const item = e.target.closest(".item");
+      if (!item) return;
+      if (e.target.closest("[data-act]")?.dataset.act === "toggle") {
+        Jinri.toggleTodo(item.dataset.id);
+        render();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      const tag = (e.target.tagName || "").toLowerCase();
+      const typing = tag === "input" || tag === "textarea";
+      if (e.key === "n" && !typing) {
+        e.preventDefault();
+        document.getElementById("title-input").focus();
+      }
+      if (["1","2","3","4"].includes(e.key) && !typing) {
+        addPriority = PRIORITIES[Number(e.key) - 1].id;
+        drawPrios();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

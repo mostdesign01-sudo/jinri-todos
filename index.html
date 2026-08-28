@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>今日待办</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="app">
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <main class="app-wrap">
+    <header class="hero">
+      <div>
+        <div class="kicker" id="date-line"></div>
+        <h1>今日待办</h1>
+      </div>
+      <div class="stat">
+        <b id="count">0</b>
+        件未完成
+      </div>
+    </header>
+
+    <section class="panel glass">
+      <form class="add-row" id="add-form" autocomplete="off">
+        <div class="prios" id="prios"></div>
+        <input id="title-input" class="title-input" name="title" maxlength="120" placeholder="写下今天要做的事，回车添加" />
+      </form>
+      <div class="list" id="list"></div>
+      <div class="toolbar">
+        <button type="button" class="btn" id="clear-samples" hidden>清示例</button>
+        <button type="button" class="btn" id="export-btn">导出</button>
+        <button type="button" class="btn" id="import-btn">导入</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden />
+        <a class="btn" href="overlay.html">打开悬浮窗</a>
+        <span class="hint">N 聚焦 · 1–4 优先级</span>
+      </div>
+    </section>
+    <p class="foot">未完成的事项会自动带到上海时区的下一天，隔夜不会清空。数据只存在这台设备的浏览器里。</p>
+  </main>
+  <script src="app.js"></script>
+  <script>
+    const { PRIORITIES } = Jinri;
+    let addPriority = "medium";
+
+    function prioButtons(root, current, onPick) {
+      root.innerHTML = PRIORITIES.map((p) =>
+        `<button type="button" class="prio-btn${p.id === current ? " on" : ""}" data-p="${p.id}">${p.label}</button>`
+      ).join("");
+      root.querySelectorAll(".prio-btn").forEach((btn) => {
+        btn.addEventListener("click", () => onPick(btn.dataset.p));
+      });
+    }
+
+    function render() {
+      const data = Jinri.load();
+      const items = Jinri.sortTodos(data.todos, true);
+      document.getElementById("date-line").textContent = Jinri.formatHeaderDate();
+      document.getElementById("count").textContent = Jinri.unfinishedCount();
+      prioButtons(document.getElementById("prios"), addPriority, (p) => {
+        addPriority = p;
+        render();
+      });
+      const list = document.getElementById("list");
+      if (!items.length) {
+        list.innerHTML = `<div class="empty">今天很轻，先写下一件小事。</div>`;
+      } else {
+        list.innerHTML = items.map((t) => `
+          <article class="item${t.done ? " done" : ""}" data-p="${t.priority}" data-id="${t.id}">
+            <button class="check" type="button" aria-label="完成" data-act="toggle">
+              <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.2l2.6 2.6L10 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+            <div class="mid">
+              <div class="meta">
+                <span class="tag">${Jinri.priorityLabel(t.priority)}</span>
+                ${t.sample ? `<span>示例</span>` : ""}
+              </div>
+              <input class="title" value="${escapeAttr(t.title)}" maxlength="120" ${t.done ? "readonly" : ""} />
+            </div>
+            <div class="side">
+              <button class="ghost" type="button" data-act="del">删除</button>
+            </div>
+          </article>
+        `).join("");
+      }
+      const clearBtn = document.getElementById("clear-samples");
+      clearBtn.hidden = !Jinri.hasSamples();
+    }
+
+    function escapeAttr(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+
+    document.getElementById("add-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("title-input");
+      Jinri.addTodo(input.value, addPriority);
+      input.value = "";
+      render();
+    });
+
+    document.getElementById("list").addEventListener("click", (e) => {
+      const item = e.target.closest(".item");
+      if (!item) return;
+      const act = e.target.closest("[data-act]")?.dataset.act;
+      if (act === "toggle") { Jinri.toggleTodo(item.dataset.id); render(); }
+      if (act === "del") { Jinri.deleteTodo(item.dataset.id); render(); }
+    });
+
+    document.getElementById("list").addEventListener("change", (e) => {
+      if (!e.target.classList.contains("title")) return;
+      const item = e.target.closest(".item");
+      Jinri.editTitle(item.dataset.id, e.target.value);
+      render();
+    });
+
+    document.getElementById("list").addEventListener("keydown", (e) => {
+      if (e.target.classList.contains("title") && e.key === "Enter") {
+        e.preventDefault();
+        e.target.blur();
+      }
+    });
+
+    document.getElementById("clear-samples").addEventListener("click", () => {
+      Jinri.clearSamples();
+      render();
+    });
+
+    document.getElementById("export-btn").addEventListener("click", () => {
+      const blob = new Blob([Jinri.exportJson()], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "jinri-todos-" + Jinri.shanghaiDateStr() + ".json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById("import-btn").addEventListener("click", () => {
+      document.getElementById("import-file").click();
+    });
+    document.getElementById("import-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        Jinri.importJson(await file.text());
+        render();
+      } catch {
+        alert("导入失败，请检查 JSON 文件。");
+      }
+      e.target.value = "";
+    });
+
+    document.addEventListener("keydown", (e) => {
+      const tag = (e.target.tagName || "").toLowerCase();
+      const typing = tag === "input" || tag === "textarea";
+      if (e.key === "n" && !typing) {
+        e.preventDefault();
+        document.getElementById("title-input").focus();
+      }
+      if (["1", "2", "3", "4"].includes(e.key) && !typing) {
+        addPriority = PRIORITIES[Number(e.key) - 1].id;
+        render();
+      }
+    });
+
+    render();
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js");
+    }
+  </script>
+</body>
+</html>
