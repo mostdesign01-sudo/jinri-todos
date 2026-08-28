@@ -18,7 +18,13 @@
   <main class="app-wrap">
     <header class="hero">
       <div>
-        <div class="kicker" id="date-line"></div>
+        <div class="kicker-row">
+          <button type="button" class="kicker-btn" id="date-toggle" aria-expanded="true" aria-controls="cal-panel">
+            <span id="date-line"></span>
+            <span class="cal-chevron" aria-hidden="true">▾</span>
+          </button>
+          <button type="button" class="btn jump-today" id="jump-today" hidden>回到今天</button>
+        </div>
         <h1>今日待办</h1>
       </div>
       <div class="stat">
@@ -26,6 +32,16 @@
         件未完成
       </div>
     </header>
+
+    <section class="cal-panel glass" id="cal-panel">
+      <div class="cal-head">
+        <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="上个月">‹</button>
+        <div class="cal-title" id="cal-title"></div>
+        <button type="button" class="cal-nav-btn" id="cal-next" aria-label="下个月">›</button>
+      </div>
+      <div class="cal-dows" id="cal-dows"></div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </section>
 
     <section class="panel glass">
       <form class="add-row" id="add-form" autocomplete="off">
@@ -39,15 +55,18 @@
         <button type="button" class="btn" id="import-btn">导入</button>
         <input type="file" id="import-file" accept="application/json,.json" hidden />
         <a class="btn" href="overlay.html">打开悬浮窗</a>
-        <span class="hint">N 聚焦 · 1–4 优先级</span>
+        <span class="hint">N 聚焦 · 1–4 优先级 · ← → 换天</span>
       </div>
     </section>
-    <p class="foot">未完成的事项会自动带到上海时区的下一天，隔夜不会清空。数据只存在这台设备的浏览器里。</p>
+    <p class="foot">事项会留在各自的日期上。今天会把过期未完成的列在「逾期」里。数据只存在这台设备的浏览器里。</p>
   </main>
   <script src="app.js"></script>
   <script>
-    const { PRIORITIES } = Jinri;
+    const { PRIORITIES, WEEKDAYS } = Jinri;
     let addPriority = "medium";
+    let viewDate = Jinri.shanghaiDateStr();
+    let cal = Jinri.yearMonth(viewDate);
+    let calOpen = sessionStorage.getItem("jinri-cal-open") !== "0";
 
     function prioButtons(root, current, onPick) {
       root.innerHTML = PRIORITIES.map((p) =>
@@ -58,49 +77,130 @@
       });
     }
 
-    function render() {
-      const data = Jinri.load();
-      const items = Jinri.sortTodos(data.todos, true);
-      document.getElementById("date-line").textContent = Jinri.formatHeaderDate();
-      document.getElementById("count").textContent = Jinri.unfinishedCount();
-      prioButtons(document.getElementById("prios"), addPriority, (p) => {
-        addPriority = p;
-        render();
-      });
-      const list = document.getElementById("list");
-      if (!items.length) {
-        list.innerHTML = `<div class="empty">今天很轻，先写下一件小事。</div>`;
-      } else {
-        list.innerHTML = items.map((t) => `
-          <article class="item${t.done ? " done" : ""}" data-p="${t.priority}" data-id="${t.id}">
-            <button class="check" type="button" aria-label="完成" data-act="toggle">
-              <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.2l2.6 2.6L10 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </button>
-            <div class="mid">
-              <div class="meta">
-                <span class="tag">${Jinri.priorityLabel(t.priority)}</span>
-                ${t.sample ? `<span>示例</span>` : ""}
-              </div>
-              <input class="title" value="${escapeAttr(t.title)}" maxlength="120" ${t.done ? "readonly" : ""} />
-            </div>
-            <div class="side">
-              <button class="ghost" type="button" data-act="del">删除</button>
-            </div>
-          </article>
-        `).join("");
-      }
-      const clearBtn = document.getElementById("clear-samples");
-      clearBtn.hidden = !Jinri.hasSamples();
-    }
-
     function escapeAttr(s) {
       return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
     }
 
+    function emptyMsg(day, today) {
+      if (day > today) return "这天还没事";
+      if (day === today) return "今天很轻，先写下一件小事。";
+      return "这天没有待办";
+    }
+
+    function itemHtml(t, showDate) {
+      const dateTag = showDate ? `<span>${Jinri.formatShortDate(t.date)}</span>` : "";
+      return `
+        <article class="item${t.done ? " done" : ""}" data-p="${t.priority}" data-id="${t.id}">
+          <button class="check" type="button" aria-label="完成" data-act="toggle">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.2l2.6 2.6L10 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <div class="mid">
+            <div class="meta">
+              <span class="tag">${Jinri.priorityLabel(t.priority)}</span>
+              ${dateTag}
+              ${t.sample ? `<span>示例</span>` : ""}
+            </div>
+            <input class="title" value="${escapeAttr(t.title)}" maxlength="120" ${t.done ? "readonly" : ""} />
+          </div>
+          <div class="side">
+            <button class="ghost" type="button" data-act="del">删除</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderCalendar() {
+      const today = Jinri.shanghaiDateStr();
+      const marks = Jinri.taskMarks();
+      document.getElementById("cal-title").textContent = Jinri.formatMonthTitle(cal.y, cal.m);
+      document.getElementById("cal-dows").innerHTML = WEEKDAYS.map((w) => `<div class="cal-dow">${w}</div>`).join("");
+      document.getElementById("cal-grid").innerHTML = Jinri.monthCells(cal.y, cal.m).map((cell) => {
+        const mark = marks[cell.date];
+        const cls = [
+          "cal-day",
+          cell.outside ? "out" : "",
+          cell.date === today ? "today" : "",
+          cell.date === viewDate ? "sel" : "",
+        ].filter(Boolean).join(" ");
+        let markHtml = `<span class="cal-mark" aria-hidden="true"></span>`;
+        if (mark) {
+          const n = mark.open || mark.total;
+          markHtml = `<span class="cal-mark on${mark.open ? " open" : ""}">${n > 1 ? n : ""}</span>`;
+        }
+        return `<button type="button" class="${cls}" data-date="${cell.date}" aria-label="${cell.date}" aria-current="${cell.date === viewDate ? "date" : "false"}"><span class="cal-num">${cell.day}</span>${markHtml}</button>`;
+      }).join("");
+    }
+
+    function render() {
+      const today = Jinri.shanghaiDateStr();
+      const isToday = viewDate === today;
+      document.getElementById("date-line").textContent = Jinri.formatHeaderDate(viewDate);
+      document.getElementById("count").textContent = Jinri.unfinishedOnDate(viewDate);
+      document.getElementById("jump-today").hidden = isToday;
+      document.getElementById("cal-panel").hidden = !calOpen;
+      document.getElementById("date-toggle").setAttribute("aria-expanded", calOpen ? "true" : "false");
+      document.getElementById("date-toggle").classList.toggle("open", calOpen);
+      document.getElementById("title-input").placeholder = isToday
+        ? "写下今天要做的事，回车添加"
+        : "写下这天要做的事，回车添加";
+      prioButtons(document.getElementById("prios"), addPriority, (p) => {
+        addPriority = p;
+        render();
+      });
+      renderCalendar();
+
+      const dayItems = Jinri.todosOnDate(viewDate, true);
+      const overdue = isToday ? Jinri.overdueTodos() : [];
+      const list = document.getElementById("list");
+      let html = "";
+      if (overdue.length) {
+        html += `<div class="sec-label warn">逾期</div>`;
+        html += overdue.map((t) => itemHtml(t, true)).join("");
+        if (dayItems.length) html += `<div class="sec-label">今天</div>`;
+      }
+      if (!dayItems.length) {
+        if (!overdue.length) html += `<div class="empty">${emptyMsg(viewDate, today)}</div>`;
+      } else {
+        html += dayItems.map((t) => itemHtml(t, false)).join("");
+      }
+      list.innerHTML = html;
+      document.getElementById("clear-samples").hidden = !Jinri.hasSamples();
+    }
+
+    function selectDate(date) {
+      if (!Jinri.isDateStr(date)) return;
+      viewDate = date;
+      cal = Jinri.yearMonth(date);
+      render();
+    }
+
+    function jumpToday() {
+      selectDate(Jinri.shanghaiDateStr());
+    }
+
+    document.getElementById("date-toggle").addEventListener("click", () => {
+      calOpen = !calOpen;
+      sessionStorage.setItem("jinri-cal-open", calOpen ? "1" : "0");
+      render();
+    });
+    document.getElementById("jump-today").addEventListener("click", jumpToday);
+    document.getElementById("cal-prev").addEventListener("click", () => {
+      cal = Jinri.addMonths(cal.y, cal.m, -1);
+      render();
+    });
+    document.getElementById("cal-next").addEventListener("click", () => {
+      cal = Jinri.addMonths(cal.y, cal.m, 1);
+      render();
+    });
+    document.getElementById("cal-grid").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-date]");
+      if (btn) selectDate(btn.dataset.date);
+    });
+
     document.getElementById("add-form").addEventListener("submit", (e) => {
       e.preventDefault();
       const input = document.getElementById("title-input");
-      Jinri.addTodo(input.value, addPriority);
+      Jinri.addTodo(input.value, addPriority, viewDate);
       input.value = "";
       render();
     });
@@ -166,6 +266,10 @@
       if (["1", "2", "3", "4"].includes(e.key) && !typing) {
         addPriority = PRIORITIES[Number(e.key) - 1].id;
         render();
+      }
+      if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !typing) {
+        e.preventDefault();
+        selectDate(Jinri.addDays(viewDate, e.key === "ArrowRight" ? 1 : -1));
       }
     });
 
