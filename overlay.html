@@ -48,7 +48,9 @@
       const todayItems = Jinri.todosOnDate(today, false);
       const n = overdue.length + todayItems.length;
       document.getElementById("overlay-date").textContent = Jinri.formatShortDate(today);
-      document.getElementById("remain").textContent = n ? `还有${n}件` : "都做完了";
+      document.getElementById("remain").textContent = n
+        ? (overdue.length ? `还有${n}件 · ${overdue.length}逾期` : `还有${n}件`)
+        : "都做完了";
       const list = document.getElementById("list");
       if (!n) {
         list.innerHTML = `<div class="empty">空空的一天。</div>`;
@@ -68,7 +70,7 @@
     function itemHtml(t, showDate) {
       const dateTag = showDate ? `<span>${Jinri.formatShortDate(t.date)}</span>` : "";
       return `
-        <article class="item" data-p="${t.priority}" data-id="${t.id}">
+        <article class="item${showDate ? " overdue" : ""}" data-p="${t.priority}" data-id="${t.id}">
           <button class="check" type="button" aria-label="完成" data-act="toggle"></button>
           <div class="mid">
             <div class="meta"><span class="tag">${Jinri.priorityLabel(t.priority)}</span>${dateTag}${t.sample ? `<span>示例</span>` : ""}</div>
