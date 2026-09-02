@@ -51,6 +51,12 @@ assert(aug[0].date === "2026-07-27", "Aug 2026 grid starts Monday Jul 27");
 assert(aug.find((c) => c.date === "2026-08-01" && !c.outside), "Aug 1 inside month");
 assert(aug[aug.length - 1].date === "2026-09-06", "Aug 2026 grid ends Sep 6");
 
+const week = Jinri.weekCells("2026-09-02");
+assert(week.length === 7, "week has 7 days");
+assert(week[0].date === "2026-08-31", "week of Sep 2 2026 starts Monday Aug 31");
+assert(week[2].date === "2026-09-02", "Wednesday is the third cell");
+assert(week[6].date === "2026-09-06", "week ends Sunday");
+
 const feb = Jinri.monthCells(2021, 2);
 assert(feb.length === 35, "Feb 2021 trims empty last row");
 assert(feb[0].date === "2021-02-01", "Feb 2021 starts on Monday");

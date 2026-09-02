@@ -81,8 +81,8 @@ body.app {
   color: var(--muted);
   padding: 0;
   cursor: pointer;
-  font-size: 12px;
-  letter-spacing: 0.22em;
+  font-size: 13px;
+  letter-spacing: 0.04em;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -124,6 +124,12 @@ h1 {
   line-height: 1;
   margin-bottom: 4px;
 }
+.overdue-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--urgent);
+  font-size: 11px;
+}
 
 .panel {
   border-radius: var(--radius);
@@ -132,8 +138,9 @@ h1 {
 
 .cal-panel {
   border-radius: var(--radius);
-  padding: 12px 12px 14px;
+  padding: 10px 10px 12px;
   margin-bottom: 14px;
+  touch-action: pan-y;
 }
 .cal-head {
   display: flex;
@@ -146,7 +153,14 @@ h1 {
   font-family: var(--font);
   font-size: 18px;
   letter-spacing: -0.02em;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 10px;
 }
+.cal-title:hover { background: rgba(255,255,255,0.05); }
 .cal-nav-btn {
   width: 42px;
   height: 42px;
@@ -169,12 +183,13 @@ h1 {
   color: var(--muted);
   padding: 6px 0 4px;
 }
+.cal-grid.week .cal-day { min-height: 48px; }
 .cal-day {
   appearance: none;
   border: 0;
   background: transparent;
   color: var(--ink);
-  min-height: 44px;
+  min-height: 42px;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -183,6 +198,7 @@ h1 {
   gap: 3px;
   cursor: pointer;
   padding: 4px 0 5px;
+  touch-action: manipulation;
 }
 .cal-day:hover { background: rgba(255,255,255,0.05); }
 .cal-day.out { opacity: 0.34; }
@@ -227,6 +243,10 @@ h1 {
   padding: 10px 4px 2px;
 }
 .sec-label.warn { color: var(--urgent); }
+.item.overdue {
+  background: rgba(251, 113, 133, 0.06);
+  border-color: rgba(251, 113, 133, 0.16);
+}
 
 .add-row {
   display: flex;
@@ -391,10 +411,16 @@ h1 {
 }
 
 @media (max-width: 520px) {
-  .hero { flex-direction: column; align-items: flex-start; }
+  .hero { flex-direction: column; align-items: flex-start; margin-bottom: 16px; }
   .stat { text-align: left; }
-  .prios { display: grid; grid-template-columns: repeat(4, auto); }
+  .app-wrap { padding-top: 20px; }
+  .add-row { flex-wrap: wrap; }
+  .prios { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); }
+  .prio-btn { width: 100%; }
+  .title-input { width: 100%; }
   .hint { width: 100%; margin-left: 0; }
-  .cal-day { min-height: 40px; border-radius: 10px; }
+  .cal-day { min-height: 38px; border-radius: 10px; }
+  .cal-grid.week .cal-day { min-height: 46px; }
   .cal-nav-btn { width: 40px; height: 40px; }
+  .empty { padding: 28px 10px 18px; font-size: 16px; }
 }

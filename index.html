@@ -29,14 +29,15 @@
       </div>
       <div class="stat">
         <b id="count">0</b>
-        件未完成
+        <span id="stat-label">件未完成</span>
+        <small class="overdue-hint" id="overdue-hint" hidden></small>
       </div>
     </header>
 
     <section class="cal-panel glass" id="cal-panel">
-      <div class="cal-head">
+      <div class="cal-head" id="cal-head">
         <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="上个月">‹</button>
-        <div class="cal-title" id="cal-title"></div>
+        <button type="button" class="cal-title" id="cal-title"></button>
         <button type="button" class="cal-nav-btn" id="cal-next" aria-label="下个月">›</button>
       </div>
       <div class="cal-dows" id="cal-dows"></div>
@@ -64,9 +65,10 @@
   <script>
     const { PRIORITIES, WEEKDAYS } = Jinri;
     let addPriority = "medium";
-    let viewDate = Jinri.shanghaiDateStr();
+    const savedView = sessionStorage.getItem("jinri-view-date");
+    let viewDate = Jinri.isDateStr(savedView) ? savedView : Jinri.shanghaiDateStr();
     let cal = Jinri.yearMonth(viewDate);
-    let calOpen = sessionStorage.getItem("jinri-cal-open") !== "0";
+    let calOpen = sessionStorage.getItem("jinri-cal-open") === "1";
 
     function prioButtons(root, current, onPick) {
       root.innerHTML = PRIORITIES.map((p) =>
@@ -89,8 +91,9 @@
 
     function itemHtml(t, showDate) {
       const dateTag = showDate ? `<span>${Jinri.formatShortDate(t.date)}</span>` : "";
+      const extra = showDate && !t.done ? " overdue" : "";
       return `
-        <article class="item${t.done ? " done" : ""}" data-p="${t.priority}" data-id="${t.id}">
+        <article class="item${t.done ? " done" : ""}${extra}" data-p="${t.priority}" data-id="${t.id}">
           <button class="check" type="button" aria-label="完成" data-act="toggle">
             <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.2l2.6 2.6L10 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
@@ -109,26 +112,32 @@
       `;
     }
 
+    function dayButton(cell, today, marks) {
+      const mark = marks[cell.date];
+      const cls = [
+        "cal-day",
+        cell.outside ? "out" : "",
+        cell.date === today ? "today" : "",
+        cell.date === viewDate ? "sel" : "",
+      ].filter(Boolean).join(" ");
+      let markHtml = `<span class="cal-mark" aria-hidden="true"></span>`;
+      if (mark) {
+        const n = mark.open || mark.total;
+        markHtml = `<span class="cal-mark on${mark.open ? " open" : ""}">${n > 1 ? n : ""}</span>`;
+      }
+      return `<button type="button" class="${cls}" data-date="${cell.date}" aria-label="${cell.date}" aria-current="${cell.date === viewDate ? "date" : "false"}"><span class="cal-num">${cell.day}</span>${markHtml}</button>`;
+    }
+
     function renderCalendar() {
       const today = Jinri.shanghaiDateStr();
       const marks = Jinri.taskMarks();
+      document.getElementById("cal-head").hidden = !calOpen;
       document.getElementById("cal-title").textContent = Jinri.formatMonthTitle(cal.y, cal.m);
       document.getElementById("cal-dows").innerHTML = WEEKDAYS.map((w) => `<div class="cal-dow">${w}</div>`).join("");
-      document.getElementById("cal-grid").innerHTML = Jinri.monthCells(cal.y, cal.m).map((cell) => {
-        const mark = marks[cell.date];
-        const cls = [
-          "cal-day",
-          cell.outside ? "out" : "",
-          cell.date === today ? "today" : "",
-          cell.date === viewDate ? "sel" : "",
-        ].filter(Boolean).join(" ");
-        let markHtml = `<span class="cal-mark" aria-hidden="true"></span>`;
-        if (mark) {
-          const n = mark.open || mark.total;
-          markHtml = `<span class="cal-mark on${mark.open ? " open" : ""}">${n > 1 ? n : ""}</span>`;
-        }
-        return `<button type="button" class="${cls}" data-date="${cell.date}" aria-label="${cell.date}" aria-current="${cell.date === viewDate ? "date" : "false"}"><span class="cal-num">${cell.day}</span>${markHtml}</button>`;
-      }).join("");
+      const cells = calOpen ? Jinri.monthCells(cal.y, cal.m) : Jinri.weekCells(viewDate);
+      const grid = document.getElementById("cal-grid");
+      grid.classList.toggle("week", !calOpen);
+      grid.innerHTML = cells.map((cell) => dayButton(cell, today, marks)).join("");
     }
 
     function render() {
@@ -137,7 +146,10 @@
       document.getElementById("date-line").textContent = Jinri.formatHeaderDate(viewDate);
       document.getElementById("count").textContent = Jinri.unfinishedOnDate(viewDate);
       document.getElementById("jump-today").hidden = isToday;
-      document.getElementById("cal-panel").hidden = !calOpen;
+      const overdueN = isToday ? Jinri.overdueTodos().length : 0;
+      const hint = document.getElementById("overdue-hint");
+      hint.hidden = !overdueN;
+      hint.textContent = overdueN ? "另有" + overdueN + "件逾期" : "";
       document.getElementById("date-toggle").setAttribute("aria-expanded", calOpen ? "true" : "false");
       document.getElementById("date-toggle").classList.toggle("open", calOpen);
       document.getElementById("title-input").placeholder = isToday
@@ -171,6 +183,7 @@
       if (!Jinri.isDateStr(date)) return;
       viewDate = date;
       cal = Jinri.yearMonth(date);
+      sessionStorage.setItem("jinri-view-date", viewDate);
       render();
     }
 
@@ -192,6 +205,27 @@
       cal = Jinri.addMonths(cal.y, cal.m, 1);
       render();
     });
+    document.getElementById("cal-title").addEventListener("click", () => {
+      cal = Jinri.yearMonth(Jinri.shanghaiDateStr());
+      render();
+    });
+    let touchX = null;
+    const calPanel = document.getElementById("cal-panel");
+    calPanel.addEventListener("touchstart", (e) => {
+      touchX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    calPanel.addEventListener("touchend", (e) => {
+      if (touchX == null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) < 56) return;
+      if (calOpen) {
+        cal = Jinri.addMonths(cal.y, cal.m, dx < 0 ? 1 : -1);
+        render();
+      } else {
+        selectDate(Jinri.addDays(viewDate, dx < 0 ? 7 : -7));
+      }
+    }, { passive: true });
     document.getElementById("cal-grid").addEventListener("click", (e) => {
       const btn = e.target.closest("[data-date]");
       if (btn) selectDate(btn.dataset.date);
