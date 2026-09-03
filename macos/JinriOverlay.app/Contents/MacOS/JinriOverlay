@@ -1,0 +1,6 @@
+#!/bin/bash
+# 今日待办 · 无边框悬浮窗
+# 用系统 WKWebView 开窗口，不走 Chrome，所以没有系统白底和红绿灯。
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+exec /usr/bin/osascript -l JavaScript "$ROOT/Resources/overlay.js" "$ROOT"

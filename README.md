@@ -11,36 +11,43 @@
 ## 能做什么
 
 - 四档优先级：紧急 / 高 / 中 / 低（红 / 橙 / 蓝 / 灰），默认「中」
-- 月历：点日期看那天的清单；有事项的日子有圆点；高亮今天和当前选中日
-- 未完成留在原日期。今天会在清单上方用「逾期」带出过去没做完的
+- 月历：点日期看那天的清单；收起时留下本周，点标题日期展开整月；有事项的日子有圆点；高亮今天和当前选中日
+- 未完成留在原日期。今天会在清单上方用「逾期」带出过去没做完的；后面几天的待办排在「陆续」里
+- 误删进最近删除，底部可立刻「找回」，工具栏「找回」也能再恢复；误勾完成可撤销（快捷键 Z）
 - 未完成按优先级、再按创建时间排序；全页里已完成沉到底部
 - 回车添加（加到**当前正在看的那天**），勾选完成；全页可点标题直接改字
 - 首次打开有 3 条标了「示例」的任务，可一键「清示例」
 - 全页支持导出 / 导入 JSON（导出包含全部日期）
 - 快捷键：`N` 聚焦输入框，`1`–`4` 切换优先级，`←` `→` 换天
 - 可安装到手机主屏幕（PWA）
+- 标题用黑体；右边挂一盏会晃的小灯笼：傍晚、夜里或有逾期时会亮起来提醒
 
 ## 桌面悬浮窗
 
-`overlay.html` 是一块透明玻璃小窗，只显示今天未完成和逾期事项、添加栏，以及「还有 N 件」。顶部有一条拖动手柄，方便以后嵌进 Electron。没有完整月历。
+首页点「打开悬浮窗」会弹出**独立小窗**，主页面还留着。Chrome / Edge 会尽量用画中画，小窗可以浮在别的窗口上面；其他浏览器则开一个窄弹窗。若被拦截，允许本站弹出窗口即可。
 
-### Windows：PowerToys 置顶
+`overlay.html` 只显示今天、逾期和陆续事项。在普通浏览器窗里铺满深色，避免露出浅色底框；Mac 原生悬浮窗会加上 `?glass=1&native=1`，变成圆角玻璃卡片。
 
-1. 用 Chrome / Edge 打开 [overlay.html](https://mostdesign01-sudo.github.io/jinri-todos/overlay.html)
-2. 安装 [PowerToys](https://learn.microsoft.com/windows/powertoys/)
-3. 选中窗口后按 `Ctrl + Win + T`（Always On Top）钉在最前
+### 做成桌面应用并置顶
 
-也可以先把 Chrome 开成独立小窗再置顶：
+**Mac（无边框、浮在最前）：**
+
+Chrome 的应用窗去不掉系统标题栏和浅色底框。请下载 [JinriOverlay.zip](macos/JinriOverlay.zip)，解压出「今日待办悬浮窗.app」，拖到「应用程序」再拖进程序坞。第一次若拦下：Control-点图标 →「打开」。不需要装 Chrome。
+
+这是系统窗口：没有红绿灯，默认置顶，可拖动圆角卡片。清单存在本机；若要和网页主页同一份，主页导出后再在窗里导入。退出点「关闭」或程序坞右键。
+
+**Windows（最像桌面小工具）：**
+
+1. 安装 [Chrome](https://www.google.com/chrome/) 或 Edge
+2. 按 `Win + R`，粘贴后回车（没有地址栏的小应用窗）：
 
 ```bash
 chrome --app=https://mostdesign01-sudo.github.io/jinri-todos/overlay.html
 ```
 
-Edge 类似：
+3. 安装 [PowerToys](https://learn.microsoft.com/windows/powertoys/)，点一下这个小窗，按 `Ctrl + Win + T` 钉在最前
 
-```bash
-msedge --app=https://mostdesign01-sudo.github.io/jinri-todos/overlay.html
-```
+Edge 把命令里的 `chrome` 换成 `msedge`。
 
 ### 手机
 
