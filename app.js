@@ -137,7 +137,7 @@ function sampleTodos(today) {
 
 function emptyData() {
   const today = shanghaiDateStr();
-  return { version: DATA_VERSION, lastDate: today, todos: sampleTodos(today) };
+  return { version: DATA_VERSION, lastDate: today, todos: sampleTodos(today), trash: [] };
 }
 
 function loadRaw() {
@@ -179,6 +179,15 @@ function migrate(data) {
   const lastDate = isDateStr(data.lastDate) ? data.lastDate : today;
   const ctx = { today, lastDate };
   data.todos = data.todos.map((t, i) => normalizeTodo(t, i, ctx));
+  const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  data.trash = (Array.isArray(data.trash) ? data.trash : [])
+    .map((t, i) => {
+      const item = normalizeTodo(t, i, ctx);
+      item.deletedAt = Number(t.deletedAt) || Date.now();
+      return item;
+    })
+    .filter((t) => t.deletedAt >= cutoff)
+    .slice(-40);
   data.version = DATA_VERSION;
   data.lastDate = today;
   return data;
@@ -228,6 +237,19 @@ function overdueTodos() {
     load().todos.filter((t) => !t.done && t.date < today),
     false
   );
+}
+
+function upcomingGroups() {
+  const today = shanghaiDateStr();
+  const groups = {};
+  load().todos.forEach((t) => {
+    if (t.done || t.date <= today) return;
+    if (!groups[t.date]) groups[t.date] = [];
+    groups[t.date].push(t);
+  });
+  return Object.keys(groups)
+    .sort()
+    .map((date) => ({ date, items: sortTodos(groups[date], false) }));
 }
 
 function overlayTodos() {
@@ -291,9 +313,40 @@ function toggleTodo(id) {
 
 function deleteTodo(id) {
   const data = load();
-  data.todos = data.todos.filter((t) => t.id !== id);
+  const item = data.todos.find((t) => t.id === id);
+  if (item) {
+    if (!Array.isArray(data.trash)) data.trash = [];
+    data.trash.push(Object.assign({}, item, { deletedAt: Date.now() }));
+    if (data.trash.length > 40) data.trash = data.trash.slice(-40);
+    data.todos = data.todos.filter((t) => t.id !== id);
+  }
   persist(data);
   return data;
+}
+
+function restoreTodo(id) {
+  const data = load();
+  if (!Array.isArray(data.trash)) data.trash = [];
+  const idx = data.trash.findIndex((t) => t.id === id);
+  if (idx < 0) return data;
+  const item = data.trash[idx];
+  data.trash.splice(idx, 1);
+  delete item.deletedAt;
+  if (data.todos.some((t) => t.id === item.id)) item.id = uid();
+  data.todos.push(item);
+  persist(data);
+  return data;
+}
+
+function restoreLast() {
+  const data = load();
+  const last = (data.trash || [])[data.trash.length - 1];
+  if (!last) return data;
+  return restoreTodo(last.id);
+}
+
+function trashList() {
+  return (load().trash || []).slice().reverse();
 }
 
 function editTitle(id, title) {
@@ -332,6 +385,7 @@ function exportJson() {
       exportedAt: new Date().toISOString(),
       lastDate: data.lastDate,
       todos: data.todos,
+      trash: data.trash || [],
     },
     null,
     2
@@ -348,6 +402,13 @@ function importJson(text) {
     version: DATA_VERSION,
     lastDate: today,
     todos: todos.map((t, i) => normalizeTodo(t, i, { today, lastDate })),
+    trash: Array.isArray(parsed.trash)
+      ? parsed.trash.map((t, i) => {
+          const item = normalizeTodo(t, i, { today, lastDate });
+          item.deletedAt = Number(t.deletedAt) || Date.now();
+          return item;
+        })
+      : [],
   };
   persist(data);
   return load();
@@ -400,6 +461,7 @@ const JinriAPI = {
   sortTodos,
   todosOnDate,
   overdueTodos,
+  upcomingGroups,
   overlayTodos,
   unfinishedOnDate,
   nowUnfinishedCount,
@@ -407,6 +469,9 @@ const JinriAPI = {
   addTodo,
   toggleTodo,
   deleteTodo,
+  restoreTodo,
+  restoreLast,
+  trashList,
   editTitle,
   setTodoPriority,
   clearSamples,

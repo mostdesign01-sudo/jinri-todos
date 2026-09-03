@@ -128,6 +128,23 @@ assert(Jinri.reminderState({ hour: 10, overdue: 1, open: 1 }).mood === "overdue"
 assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 0 }).mood === "done", "none left is done");
 assert(Jinri.reminderState({ hour: 18, overdue: 0, open: 2 }).text === "天快晚了", "dusk copy");
 
+reset();
+seed({
+  lastDate: today,
+  todos: [
+    { id: "del-me", title: "误删", priority: "high", done: false, createdAt: 1, date: today },
+    { id: "later", title: "周末计划", priority: "medium", done: false, createdAt: 2, date: tomorrow },
+  ],
+  trash: [],
+});
+Jinri.deleteTodo("del-me");
+assert(!Jinri.load().todos.some((t) => t.id === "del-me"), "delete removes from list");
+assert(Jinri.trashList().some((t) => t.id === "del-me"), "delete keeps trash copy");
+assert(Jinri.upcomingGroups()[0] && Jinri.upcomingGroups()[0].items[0].title === "周末计划", "upcoming groups future tasks");
+Jinri.restoreTodo("del-me");
+assert(Jinri.load().todos.some((t) => t.id === "del-me"), "restore puts task back");
+assert(!Jinri.trashList().some((t) => t.id === "del-me"), "restore leaves trash");
+
 if (failed) {
   console.error("\n" + failed + " failed");
   process.exit(1);

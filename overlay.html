@@ -65,6 +65,8 @@
       const today = Jinri.shanghaiDateStr();
       const overdue = Jinri.overdueTodos();
       const todayItems = Jinri.todosOnDate(today, false);
+      const later = Jinri.upcomingGroups();
+      const laterN = later.reduce((s, g) => s + g.items.length, 0);
       const n = overdue.length + todayItems.length;
       document.getElementById("overlay-date").textContent = Jinri.formatShortDate(today);
       document.getElementById("remain").textContent = n
@@ -78,7 +80,7 @@
       say.hidden = !show;
       say.textContent = state.text;
       const list = document.getElementById("list");
-      if (!n) {
+      if (!n && !laterN) {
         list.innerHTML = `<div class="empty">空空的一天。</div>`;
       } else {
         let html = "";
@@ -88,6 +90,13 @@
           if (todayItems.length) html += `<div class="sec-label">今天</div>`;
         }
         html += todayItems.map((t) => itemHtml(t, false)).join("");
+        if (later.length) {
+          html += `<div class="sec-label">陆续</div>`;
+          later.forEach((group) => {
+            html += `<div class="sec-date">${Jinri.formatShortDate(group.date)}</div>`;
+            html += group.items.map((t) => itemHtml(t, false)).join("");
+          });
+        }
         list.innerHTML = html;
       }
       drawPrios();

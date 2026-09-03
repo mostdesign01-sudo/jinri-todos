@@ -71,17 +71,23 @@
         <input id="title-input" class="title-input" name="title" maxlength="120" placeholder="写下今天要做的事，回车添加" />
       </form>
       <div class="list" id="list"></div>
+      <div class="trash-box" id="trash-box" hidden></div>
       <div class="toolbar">
         <button type="button" class="btn" id="clear-samples" hidden>清示例</button>
+        <button type="button" class="btn" id="trash-btn" hidden>找回</button>
         <button type="button" class="btn" id="export-btn">导出</button>
         <button type="button" class="btn" id="import-btn">导入</button>
         <input type="file" id="import-file" accept="application/json,.json" hidden />
         <a class="btn" href="overlay.html">打开悬浮窗</a>
-        <span class="hint">N 聚焦 · 1–4 优先级 · ← → 换天</span>
+        <span class="hint">N 聚焦 · 1–4 优先级 · ← → 换天 · Z 撤销</span>
       </div>
     </section>
-    <p class="foot">事项会留在各自的日期上。今天会把过期未完成的列在「逾期」里。数据只存在这台设备的浏览器里。</p>
+    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点「找回」，或按 Z 撤销。数据只存在这台设备的浏览器里。</p>
   </main>
+  <div class="toast" id="toast" hidden>
+    <span id="toast-text"></span>
+    <button type="button" class="btn" id="toast-undo">撤销</button>
+  </div>
   <script src="app.js"></script>
   <script>
     const { PRIORITIES, WEEKDAYS } = Jinri;
@@ -90,6 +96,9 @@
     let viewDate = Jinri.isDateStr(savedView) ? savedView : Jinri.shanghaiDateStr();
     let cal = Jinri.yearMonth(viewDate);
     let calOpen = sessionStorage.getItem("jinri-cal-open") === "1";
+    let trashOpen = false;
+    let lastUndo = null;
+    let toastTimer = 0;
 
     function prioButtons(root, current, onPick) {
       root.innerHTML = PRIORITIES.map((p) =>
@@ -184,21 +193,71 @@
 
       const dayItems = Jinri.todosOnDate(viewDate, true);
       const overdue = isToday ? Jinri.overdueTodos() : [];
+      const later = isToday ? Jinri.upcomingGroups() : [];
       const list = document.getElementById("list");
       let html = "";
       if (overdue.length) {
         html += `<div class="sec-label warn">逾期</div>`;
         html += overdue.map((t) => itemHtml(t, true)).join("");
-        if (dayItems.length) html += `<div class="sec-label">今天</div>`;
+        if (dayItems.length || later.length) html += `<div class="sec-label">今天</div>`;
       }
       if (!dayItems.length) {
-        if (!overdue.length) html += `<div class="empty">${emptyMsg(viewDate, today)}</div>`;
+        if (!overdue.length && !later.length) html += `<div class="empty">${emptyMsg(viewDate, today)}</div>`;
       } else {
         html += dayItems.map((t) => itemHtml(t, false)).join("");
       }
+      if (later.length) {
+        html += `<div class="sec-label">陆续</div>`;
+        later.forEach((group) => {
+          html += `<button type="button" class="sec-date" data-jump="${group.date}">${Jinri.formatShortDate(group.date)}</button>`;
+          html += group.items.map((t) => itemHtml(t, false)).join("");
+        });
+      }
       list.innerHTML = html;
       document.getElementById("clear-samples").hidden = !Jinri.hasSamples();
+      renderTrash();
       renderLantern();
+    }
+
+    function renderTrash() {
+      const items = Jinri.trashList();
+      document.getElementById("trash-btn").hidden = !items.length;
+      const box = document.getElementById("trash-box");
+      box.hidden = !trashOpen || !items.length;
+      if (box.hidden) return;
+      box.innerHTML = `<div class="sec-label">最近删除</div>` + items.map((t) => `
+        <article class="item trash-item" data-id="${t.id}">
+          <div class="mid">
+            <div class="meta">
+              <span class="tag">${Jinri.priorityLabel(t.priority)}</span>
+              <span>${Jinri.formatShortDate(t.date)}</span>
+            </div>
+            <div class="title">${escapeAttr(t.title)}</div>
+          </div>
+          <div class="side">
+            <button class="ghost" type="button" data-act="restore">恢复</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function showUndo(kind, payload, message) {
+      lastUndo = { kind, payload };
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-text").textContent = message;
+      document.getElementById("toast-undo").textContent = kind === "delete" ? "找回" : "撤销";
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 8000);
+    }
+
+    function runUndo() {
+      if (!lastUndo) return;
+      if (lastUndo.kind === "delete") Jinri.restoreTodo(lastUndo.payload);
+      if (lastUndo.kind === "toggle") Jinri.toggleTodo(lastUndo.payload);
+      lastUndo = null;
+      document.getElementById("toast").hidden = true;
+      render();
     }
 
     function renderLantern() {
@@ -280,12 +339,38 @@
     });
 
     document.getElementById("list").addEventListener("click", (e) => {
+      const jump = e.target.closest("[data-jump]");
+      if (jump) { selectDate(jump.dataset.jump); return; }
       const item = e.target.closest(".item");
       if (!item) return;
       const act = e.target.closest("[data-act]")?.dataset.act;
-      if (act === "toggle") { Jinri.toggleTodo(item.dataset.id); render(); }
-      if (act === "del") { Jinri.deleteTodo(item.dataset.id); render(); }
+      if (act === "toggle") {
+        const title = item.querySelector(".title")?.value || "";
+        const turningDone = !item.classList.contains("done");
+        Jinri.toggleTodo(item.dataset.id);
+        if (turningDone) showUndo("toggle", item.dataset.id, "已完成「" + title + "」");
+        render();
+      }
+      if (act === "del") {
+        const title = item.querySelector(".title")?.value || "";
+        Jinri.deleteTodo(item.dataset.id);
+        showUndo("delete", item.dataset.id, "已删除「" + title + "」");
+        render();
+      }
     });
+    document.getElementById("trash-box").addEventListener("click", (e) => {
+      const item = e.target.closest(".item");
+      if (!item) return;
+      if (e.target.closest("[data-act]")?.dataset.act === "restore") {
+        Jinri.restoreTodo(item.dataset.id);
+        render();
+      }
+    });
+    document.getElementById("trash-btn").addEventListener("click", () => {
+      trashOpen = !trashOpen;
+      renderTrash();
+    });
+    document.getElementById("toast-undo").addEventListener("click", runUndo);
 
     document.getElementById("list").addEventListener("change", (e) => {
       if (!e.target.classList.contains("title")) return;
@@ -344,6 +429,10 @@
       if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !typing) {
         e.preventDefault();
         selectDate(Jinri.addDays(viewDate, e.key === "ArrowRight" ? 1 : -1));
+      }
+      if ((e.key === "z" || e.key === "Z") && !typing && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        runUndo();
       }
     });
 
