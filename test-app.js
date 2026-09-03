@@ -121,6 +121,13 @@ Jinri.toggleTodo("tog");
 const toggled = Jinri.load().todos[0];
 assert(toggled.done && toggled.date === yesterday && toggled.doneDate === today, "toggle done keeps original date");
 
+assert(Jinri.reminderState({ hour: 10, overdue: 0, open: 2 }).mood === "idle", "daytime unfinished is idle");
+assert(Jinri.reminderState({ hour: 18, overdue: 0, open: 2 }).mood === "dusk", "evening unfinished is dusk");
+assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 1 }).mood === "night", "late unfinished is night");
+assert(Jinri.reminderState({ hour: 10, overdue: 1, open: 1 }).mood === "overdue", "overdue wins over hour");
+assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 0 }).mood === "done", "none left is done");
+assert(Jinri.reminderState({ hour: 18, overdue: 0, open: 2 }).text === "天快晚了", "dusk copy");
+
 if (failed) {
   console.error("\n" + failed + " failed");
   process.exit(1);

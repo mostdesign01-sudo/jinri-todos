@@ -358,6 +358,28 @@ function unfinishedCount(date) {
   return nowUnfinishedCount();
 }
 
+function shanghaiHour(now) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(now || new Date());
+  const hour = Number((parts.find((p) => p.type === "hour") || {}).value);
+  return hour === 24 ? 0 : hour;
+}
+
+function reminderState(opts) {
+  const o = opts || {};
+  const hour = typeof o.hour === "number" ? o.hour : shanghaiHour(o.now);
+  const overdue = typeof o.overdue === "number" ? o.overdue : overdueTodos().length;
+  const open = typeof o.open === "number" ? o.open : nowUnfinishedCount();
+  if (open <= 0) return { mood: "done", hour, text: "都做完了" };
+  if (overdue > 0) return { mood: "overdue", hour, text: "有逾期" };
+  if (hour >= 21) return { mood: "night", hour, text: "还没做完" };
+  if (hour >= 17) return { mood: "dusk", hour, text: "天快晚了" };
+  return { mood: "idle", hour, text: "" };
+}
+
 const JinriAPI = {
   STORAGE_KEY,
   DATA_VERSION,
@@ -393,6 +415,8 @@ const JinriAPI = {
   importJson,
   unfinishedCount,
   priorityLabel,
+  shanghaiHour,
+  reminderState,
 };
 
 root.Jinri = JinriAPI;

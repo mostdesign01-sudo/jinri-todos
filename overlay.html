@@ -14,10 +14,29 @@
     <div class="drag-handle" title="拖动"><i></i></div>
     <div class="widget-body">
       <div class="overlay-head">
-        <div>
+        <div class="overlay-brand">
           <h1>今日待办</h1>
           <div class="overlay-date" id="overlay-date"></div>
         </div>
+        <button type="button" class="lantern lantern-sm" id="lantern" data-mood="idle" aria-label="提醒灯笼">
+          <span class="lantern-say" id="lantern-say" hidden></span>
+          <svg class="lantern-svg" viewBox="0 0 64 88" aria-hidden="true">
+            <line class="lantern-cord" x1="32" y1="2" x2="32" y2="12" />
+            <rect class="lantern-cap" x="22" y="10" width="20" height="6" rx="2" />
+            <ellipse class="lantern-glow" cx="32" cy="40" rx="22" ry="24" />
+            <path class="lantern-body" d="M16 22c0-2 4-4 16-4s16 2 16 4v32c0 8-6 14-16 14S16 62 16 54V22z" />
+            <path class="lantern-rib" d="M32 18v48M20 26c6 3 18 3 24 0M20 40c6 3 18 3 24 0M20 52c6 2 18 2 24 0" />
+            <g class="lantern-face">
+              <ellipse class="lantern-eye" cx="25" cy="38" rx="3.2" ry="3.6" />
+              <ellipse class="lantern-eye" cx="39" cy="38" rx="3.2" ry="3.6" />
+              <path class="lantern-mouth" d="M28 47c2 2.4 6 2.4 8 0" />
+            </g>
+            <ellipse class="lantern-flame" cx="32" cy="40" rx="5" ry="8" />
+            <rect class="lantern-base" x="24" y="66" width="16" height="5" rx="1.5" />
+            <path class="lantern-tassel" d="M32 71v10" />
+            <circle class="lantern-bead" cx="32" cy="83" r="2.2" />
+          </svg>
+        </button>
         <div class="remain" id="remain"></div>
       </div>
       <form class="add-row" id="add-form" autocomplete="off">
@@ -51,6 +70,13 @@
       document.getElementById("remain").textContent = n
         ? (overdue.length ? `还有${n}件 · ${overdue.length}逾期` : `还有${n}件`)
         : "都做完了";
+      const state = Jinri.reminderState();
+      const lantern = document.getElementById("lantern");
+      const say = document.getElementById("lantern-say");
+      lantern.dataset.mood = state.mood;
+      const show = state.mood === "dusk" || state.mood === "night" || state.mood === "overdue";
+      say.hidden = !show;
+      say.textContent = state.text;
       const list = document.getElementById("list");
       if (!n) {
         list.innerHTML = `<div class="empty">空空的一天。</div>`;

@@ -56,16 +56,32 @@ body.overlay {
   justify-content: space-between;
   padding: 2px 6px 8px;
 }
+.overlay-head {
+  align-items: center;
+}
+.overlay-brand { min-width: 0; }
 .overlay-head h1 {
   font-size: 18px;
   margin: 0;
-  font-family: var(--font);
-  letter-spacing: -0.02em;
+  font-family: var(--heiti);
+  font-weight: 800;
+  letter-spacing: 0.06em;
   background: none;
   color: var(--ink);
   -webkit-background-clip: unset;
   background-clip: unset;
 }
+.widget .lantern-sm {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  width: 28px;
+  height: 40px;
+  flex-shrink: 0;
+  margin: 0 4px 0 auto;
+}
+.widget .lantern-sm .lantern-svg { width: 28px; height: 40px; }
+.widget .lantern-say { top: -10px; right: -18px; font-size: 10px; padding: 2px 6px; }
 .overlay-date {
   font-size: 11px;
   color: var(--muted);
