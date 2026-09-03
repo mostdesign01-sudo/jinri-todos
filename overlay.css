@@ -52,12 +52,10 @@ body.overlay {
 
 .overlay-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   padding: 2px 6px 8px;
-}
-.overlay-head {
-  align-items: center;
+  gap: 6px;
 }
 .overlay-brand { min-width: 0; }
 .overlay-head h1 {
