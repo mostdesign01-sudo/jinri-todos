@@ -1,8 +1,7 @@
--- 今日待办 · 悬浮窗（备用）
--- 更省事：直接下载同目录 JinriOverlay.zip，解压即可。
--- 若仍想自己导出：用「脚本编辑器」打开 → 文件 → 导出 → 应用程序。
+-- 备用：用 Chrome 开应用窗（仍会有系统标题栏）。
+-- 正式用法：下载同目录 JinriOverlay.zip，解压即是无边框悬浮窗。
 
-set overlayURL to "https://mostdesign01-sudo.github.io/jinri-todos/overlay.html"
+set overlayURL to "https://mostdesign01-sudo.github.io/jinri-todos/overlay.html?app=1"
 set chromeBin to "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 set edgeBin to "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
 

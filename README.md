@@ -26,11 +26,15 @@
 
 首页点「打开悬浮窗」会弹出**独立小窗**，主页面还留着。Chrome / Edge 会尽量用画中画，小窗可以浮在别的窗口上面；其他浏览器则开一个窄弹窗。若被拦截，允许本站弹出窗口即可。
 
-`overlay.html` 本身仍是一块透明玻璃小窗，只显示今天、逾期和陆续事项。顶部有拖动手柄，也方便以后嵌进 Electron。没有完整月历。
+`overlay.html` 只显示今天、逾期和陆续事项。在普通浏览器窗里铺满深色，避免露出浅色底框；Mac 原生悬浮窗会加上 `?glass=1&native=1`，变成圆角玻璃卡片。
 
 ### 做成桌面应用并置顶
 
-网页不能自己一直压在所有软件上面，需要开成独立应用窗，再用系统钉住。
+**Mac（无边框、浮在最前）：**
+
+Chrome 的应用窗去不掉系统标题栏和浅色底框。请下载 [JinriOverlay.zip](macos/JinriOverlay.zip)，解压出「今日待办悬浮窗.app」，拖到「应用程序」再拖进程序坞。第一次若拦下：Control-点图标 →「打开」。不需要装 Chrome。
+
+这是系统窗口：没有红绿灯，默认置顶，可拖动圆角卡片。清单存在本机；若要和网页主页同一份，主页导出后再在窗里导入。退出点「关闭」或程序坞右键。
 
 **Windows（最像桌面小工具）：**
 
@@ -44,19 +48,6 @@ chrome --app=https://mostdesign01-sudo.github.io/jinri-todos/overlay.html
 3. 安装 [PowerToys](https://learn.microsoft.com/windows/powertoys/)，点一下这个小窗，按 `Ctrl + Win + T` 钉在最前
 
 Edge 把命令里的 `chrome` 换成 `msedge`。
-
-**Mac（做成 Dock 里的应用）：**
-
-1. **Chrome 安装为应用：** 打开首页 → 右上角 `⋮` →「将今日待办安装为应用」。之后从启动台打开，没有浏览器外壳。
-2. **只要悬浮清单：** 下载 [JinriOverlay.zip](macos/JinriOverlay.zip)，解压得到「今日待办悬浮窗.app」，拖到「应用程序」再拖进程序坞。第一次若拦下：Control-点图标 →「打开」。需要已安装 Chrome 或 Edge。
-3. **Safari（较新系统）：**「文件」→「添加到程序坞」。
-4. 终端每次开一个无地址栏小窗：
-
-```bash
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --app="https://mostdesign01-sudo.github.io/jinri-todos/overlay.html"
-```
-
-Mac 没有系统自带的一键置顶；Chrome 画中画小窗一般会浮在前面。
 
 ### 手机
 
