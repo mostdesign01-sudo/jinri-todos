@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-URL="https://mostdesign01-sudo.github.io/jinri-todos/overlay.html"
+URL="https://mostdesign01-sudo.github.io/jinri-todos/overlay.html?app=1"
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CHROME_ALT="$HOME/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 EDGE="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"

@@ -1,42 +1,44 @@
+:root { color-scheme: dark; }
 html, body {
-  background: transparent !important;
   margin: 0;
   padding: 0;
   overflow: hidden;
-}
-html.is-float, html.is-float body,
-html.is-float body.overlay {
-  background: #0b0d12 !important;
-}
-html.is-float .widget {
-  margin: 0;
-  height: 100dvh;
-  max-height: 100dvh;
-  border-radius: 0;
-  border: 0;
-}
-@media (display-mode: picture-in-picture) {
-  html, body, body.overlay { background: #0b0d12 !important; }
-  .widget { margin: 0; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; }
+  background: #0b0d12;
+  color-scheme: dark;
 }
 body.overlay {
   min-height: 100dvh;
   color: var(--ink);
   font-family: var(--ui);
+  background: #0b0d12;
 }
 
 .widget {
-  margin: 10px;
-  border-radius: 20px;
+  margin: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0;
   overflow: hidden;
+  background: #0b0d12;
+  border: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+html.glass, html.glass body, html.glass body.overlay {
+  background: transparent !important;
+}
+html.glass .widget {
+  margin: 10px;
+  height: auto;
+  max-height: calc(100dvh - 20px);
+  border-radius: 20px;
   background: rgba(10, 12, 18, 0.55);
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow: 0 18px 50px rgba(0,0,0,0.38);
   backdrop-filter: blur(24px) saturate(1.4);
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100dvh - 20px);
 }
 
 .drag-handle {
@@ -124,4 +126,9 @@ body.overlay {
 .widget .empty { padding: 18px 6px; font-size: 14px; }
 .widget .item.overdue {
   background: rgba(251, 113, 133, 0.08);
+}
+
+@media (display-mode: picture-in-picture) {
+  html, body, body.overlay { background: #0b0d12; }
+  .widget { margin: 0; height: 100dvh; max-height: 100dvh; border-radius: 0; }
 }
