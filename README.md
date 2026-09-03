@@ -28,23 +28,30 @@
 
 `overlay.html` 本身仍是一块透明玻璃小窗，只显示今天、逾期和陆续事项。顶部有拖动手柄，也方便以后嵌进 Electron。没有完整月历。
 
-### Windows：PowerToys 置顶
+### 做成桌面应用并置顶
 
-1. 在首页点「打开悬浮窗」，或用 Chrome / Edge 打开 [overlay.html](https://mostdesign01-sudo.github.io/jinri-todos/overlay.html)
-2. 安装 [PowerToys](https://learn.microsoft.com/windows/powertoys/)
-3. 选中窗口后按 `Ctrl + Win + T`（Always On Top）钉在最前
+网页不能自己一直压在所有软件上面，需要开成独立应用窗，再用系统钉住。
 
-也可以先把 Chrome 开成独立小窗再置顶：
+**Windows（最像桌面小工具）：**
+
+1. 安装 [Chrome](https://www.google.com/chrome/) 或 Edge
+2. 按 `Win + R`，粘贴后回车（没有地址栏的小应用窗）：
 
 ```bash
 chrome --app=https://mostdesign01-sudo.github.io/jinri-todos/overlay.html
 ```
 
-Edge 类似：
+3. 安装 [PowerToys](https://learn.microsoft.com/windows/powertoys/)，点一下这个小窗，按 `Ctrl + Win + T` 钉在最前
+
+Edge 把命令里的 `chrome` 换成 `msedge`。
+
+**Mac：**
 
 ```bash
-msedge --app=https://mostdesign01-sudo.github.io/jinri-todos/overlay.html
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --app="https://mostdesign01-sudo.github.io/jinri-todos/overlay.html"
 ```
+
+或用 Chrome 菜单「将页面安装为应用」。Mac 没有系统自带的一键置顶，画中画小窗一般会浮在前面。
 
 ### 手机
 

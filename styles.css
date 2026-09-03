@@ -560,6 +560,43 @@ h1 {
 }
 .toast[hidden] { display: none !important; }
 
+.pin-help {
+  margin-top: 14px;
+  padding: 12px 14px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.pin-help p { margin: 8px 0 10px; }
+.pin-help ol { margin: 0; padding-left: 18px; }
+.pin-help li { margin: 6px 0; }
+.pin-help a { color: var(--medium); }
+.pin-help code {
+  font-size: 12px;
+  color: #e2e8f0;
+  background: rgba(0,0,0,0.28);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+.pin-cmd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+.pin-cmd code {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  padding: 8px 10px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
 .foot {
   margin-top: 18px;
   color: #6b7288;

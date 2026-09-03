@@ -79,10 +79,25 @@
         <button type="button" class="btn" id="import-btn">导入</button>
         <input type="file" id="import-file" accept="application/json,.json" hidden />
         <button type="button" class="btn" id="overlay-btn">打开悬浮窗</button>
+        <button type="button" class="btn" id="pin-btn">钉在桌面</button>
         <span class="hint">N 聚焦 · 1–4 优先级 · ← → 换天 · Z 撤销</span>
       </div>
+      <aside class="pin-help" id="pin-help" hidden>
+        <div class="sec-label">做成桌面小应用</div>
+        <p>网页自己不能一直压在所有软件上面，要开成<strong>独立小窗</strong>，再用系统钉住。</p>
+        <ol>
+          <li><b>Chrome / Edge 最快：</b>点「打开悬浮窗」。画中画小窗可以拖到桌面角落，会浮在别的窗口上。</li>
+          <li><b>做成真正的应用窗（没有地址栏）：</b>用 Chrome 或 Edge 在开始菜单运行下面这一行（复制即可）。</li>
+          <li><b>Windows 要一直置顶：</b>安装 <a href="https://learn.microsoft.com/windows/powertoys/" target="_blank" rel="noreferrer">PowerToys</a>，点一下小窗，按 <code>Ctrl</code> + <code>Win</code> + <code>T</code>。</li>
+          <li><b>Mac：</b>Chrome 菜单「将今日待办安装为应用」，打开后再用「打开悬浮窗」；或终端运行同一条 <code>--app</code> 命令。</li>
+        </ol>
+        <div class="pin-cmd">
+          <code id="pin-cmd-text"></code>
+          <button type="button" class="btn" id="pin-copy">复制命令</button>
+        </div>
+      </aside>
     </section>
-    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点「找回」，或按 Z 撤销。悬浮窗会弹出独立小窗，不占这个页面。数据只存在这台设备的浏览器里。</p>
+    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点「找回」，或按 Z 撤销。想浮在桌面上，点「钉在桌面」看步骤。数据只存在这台设备的浏览器里。</p>
   </main>
   <div class="toast" id="toast" hidden>
     <span id="toast-text"></span>
@@ -436,6 +451,23 @@
     }
     document.getElementById("overlay-btn").addEventListener("click", () => {
       openOverlayWindow();
+    });
+    const pinHelp = document.getElementById("pin-help");
+    const pinCmd = document.getElementById("pin-cmd-text");
+    const overlayUrl = new URL("overlay.html", location.href).href;
+    pinCmd.textContent = "chrome --app=" + overlayUrl;
+    document.getElementById("pin-btn").addEventListener("click", () => {
+      pinHelp.hidden = !pinHelp.hidden;
+    });
+    document.getElementById("pin-copy").addEventListener("click", async () => {
+      const text = pinCmd.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("pin-copy").textContent = "已复制";
+        setTimeout(() => { document.getElementById("pin-copy").textContent = "复制命令"; }, 1600);
+      } catch {
+        prompt("复制这行：", text);
+      }
     });
 
     document.getElementById("import-btn").addEventListener("click", () => {
