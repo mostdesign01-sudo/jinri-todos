@@ -48,7 +48,7 @@ Edge 把命令里的 `chrome` 换成 `msedge`。
 **Mac（做成 Dock 里的应用）：**
 
 1. **Chrome 安装为应用：** 打开首页 → 右上角 `⋮` →「将今日待办安装为应用」。之后从启动台打开，没有浏览器外壳。
-2. **只要悬浮清单：** 下载 [`macos/jinri-overlay.applescript`](macos/jinri-overlay.applescript)，用「脚本编辑器」打开 →「文件」→「导出」→ 格式选「应用程序」，存到「应用程序」或桌面，拖进程序坞。
+2. **只要悬浮清单：** 下载 [JinriOverlay.zip](macos/JinriOverlay.zip)，解压得到「今日待办悬浮窗.app」，拖到「应用程序」再拖进程序坞。第一次若拦下：Control-点图标 →「打开」。需要已安装 Chrome 或 Edge。
 3. **Safari（较新系统）：**「文件」→「添加到程序坞」。
 4. 终端每次开一个无地址栏小窗：
 

@@ -1,8 +1,6 @@
--- 今日待办 · 悬浮窗
--- 1. 用「脚本编辑器」打开本文件
--- 2. 菜单「文件」→「导出…」
--- 3. 文件格式选「应用程序」，不要勾选「仅在运行时显示」
--- 4. 存到「应用程序」文件夹或桌面，再拖到程序坞
+-- 今日待办 · 悬浮窗（备用）
+-- 更省事：直接下载同目录 JinriOverlay.zip，解压即可。
+-- 若仍想自己导出：用「脚本编辑器」打开 → 文件 → 导出 → 应用程序。
 
 set overlayURL to "https://mostdesign01-sudo.github.io/jinri-todos/overlay.html"
 set chromeBin to "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
