@@ -84,13 +84,22 @@
       </div>
       <aside class="pin-help" id="pin-help" hidden>
         <div class="sec-label">做成桌面小应用</div>
-        <p>网页自己不能一直压在所有软件上面，要开成<strong>独立小窗</strong>，再用系统钉住。</p>
-        <ol>
-          <li><b>Chrome / Edge 最快：</b>点「打开悬浮窗」。画中画小窗可以拖到桌面角落，会浮在别的窗口上。</li>
-          <li><b>做成真正的应用窗（没有地址栏）：</b>用 Chrome 或 Edge 在开始菜单运行下面这一行（复制即可）。</li>
-          <li><b>Windows 要一直置顶：</b>安装 <a href="https://learn.microsoft.com/windows/powertoys/" target="_blank" rel="noreferrer">PowerToys</a>，点一下小窗，按 <code>Ctrl</code> + <code>Win</code> + <code>T</code>。</li>
-          <li><b>Mac：</b>Chrome 菜单「将今日待办安装为应用」，打开后再用「打开悬浮窗」；或终端运行同一条 <code>--app</code> 命令。</li>
-        </ol>
+        <p>可以做成 Mac 应用：没有地址栏，图标能放进程序坞。网页自己不能永远压在所有软件最上面，但应用窗已经很接近。</p>
+        <div id="pin-mac">
+          <ol>
+            <li><b>最快：</b>用 Chrome 打开本页 → 右上角 <code>⋮</code> →「投放、保存并分享」或「将今日待办安装为应用」。之后从启动台打开，就是独立 App。</li>
+            <li><b>只要悬浮清单：</b>下载 <a id="pin-script-link" href="macos/jinri-overlay.applescript" download>这支脚本</a>，用「脚本编辑器」打开 →「文件」→「导出」→ 格式选<strong>应用程序</strong>，存到「应用程序」或桌面，拖进程序坞。</li>
+            <li><b>Safari：</b>打开本页 →「文件」→「添加到程序坞」（系统较新才有）。</li>
+            <li>终端也可以用下面命令，每次开一个无地址栏小窗。</li>
+          </ol>
+        </div>
+        <div id="pin-win">
+          <ol>
+            <li>点「打开悬浮窗」可先弹出小窗。</li>
+            <li>或按 <code>Win + R</code>，粘贴下面命令，开成没有地址栏的应用窗。</li>
+            <li>要一直置顶：安装 <a href="https://learn.microsoft.com/windows/powertoys/" target="_blank" rel="noreferrer">PowerToys</a>，点小窗后按 <code>Ctrl</code> + <code>Win</code> + <code>T</code>。</li>
+          </ol>
+        </div>
         <div class="pin-cmd">
           <code id="pin-cmd-text"></code>
           <button type="button" class="btn" id="pin-copy">复制命令</button>
@@ -455,7 +464,12 @@
     const pinHelp = document.getElementById("pin-help");
     const pinCmd = document.getElementById("pin-cmd-text");
     const overlayUrl = new URL("overlay.html", location.href).href;
-    pinCmd.textContent = "chrome --app=" + overlayUrl;
+    const isMac = /Mac|iPhone|iPad/.test(navigator.platform + navigator.userAgent);
+    document.getElementById("pin-mac").hidden = !isMac;
+    document.getElementById("pin-win").hidden = isMac;
+    pinCmd.textContent = isMac
+      ? "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --app=\"" + overlayUrl + "\""
+      : "chrome --app=" + overlayUrl;
     document.getElementById("pin-btn").addEventListener("click", () => {
       pinHelp.hidden = !pinHelp.hidden;
     });
