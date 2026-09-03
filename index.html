@@ -78,11 +78,11 @@
         <button type="button" class="btn" id="export-btn">导出</button>
         <button type="button" class="btn" id="import-btn">导入</button>
         <input type="file" id="import-file" accept="application/json,.json" hidden />
-        <a class="btn" href="overlay.html">打开悬浮窗</a>
+        <button type="button" class="btn" id="overlay-btn">打开悬浮窗</button>
         <span class="hint">N 聚焦 · 1–4 优先级 · ← → 换天 · Z 撤销</span>
       </div>
     </section>
-    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点「找回」，或按 Z 撤销。数据只存在这台设备的浏览器里。</p>
+    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点「找回」，或按 Z 撤销。悬浮窗会弹出独立小窗，不占这个页面。数据只存在这台设备的浏览器里。</p>
   </main>
   <div class="toast" id="toast" hidden>
     <span id="toast-text"></span>
@@ -400,6 +400,44 @@
       URL.revokeObjectURL(a.href);
     });
 
+    let overlayWin = null;
+    async function openOverlayWindow() {
+      if (window.documentPictureInPicture && documentPictureInPicture.window) return;
+      if (overlayWin && !overlayWin.closed) {
+        overlayWin.focus();
+        return;
+      }
+      const url = new URL("overlay.html", location.href).href;
+      if (window.documentPictureInPicture) {
+        try {
+          const pip = await documentPictureInPicture.requestWindow({ width: 400, height: 580 });
+          pip.document.title = "今日待办";
+          pip.document.documentElement.style.height = "100%";
+          pip.document.body.style.cssText = "margin:0;height:100%;background:#0b0d12;overflow:hidden";
+          const frame = pip.document.createElement("iframe");
+          frame.src = url;
+          frame.setAttribute("style", "border:0;width:100%;height:100%;display:block;background:#0b0d12");
+          pip.document.body.appendChild(frame);
+          return;
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+      overlayWin = window.open(
+        url,
+        "jinri-overlay",
+        "popup=yes,width=400,height=580,left=72,top=72,resizable=yes,scrollbars=yes"
+      );
+      if (!overlayWin) {
+        alert("浏览器拦住了小窗。请允许本站弹出窗口，或用 Chrome / Edge 再试。");
+        return;
+      }
+      overlayWin.focus();
+    }
+    document.getElementById("overlay-btn").addEventListener("click", () => {
+      openOverlayWindow();
+    });
+
     document.getElementById("import-btn").addEventListener("click", () => {
       document.getElementById("import-file").click();
     });
@@ -436,6 +474,9 @@
       }
     });
 
+    window.addEventListener("storage", (e) => {
+      if (e.key === Jinri.STORAGE_KEY) render();
+    });
     render();
     setInterval(renderLantern, 60000);
     if ("serviceWorker" in navigator) {

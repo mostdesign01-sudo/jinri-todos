@@ -24,11 +24,13 @@
 
 ## 桌面悬浮窗
 
-`overlay.html` 是一块透明玻璃小窗，只显示今天未完成和逾期事项、添加栏，以及「还有 N 件」。顶部有一条拖动手柄，方便以后嵌进 Electron。没有完整月历。
+首页点「打开悬浮窗」会弹出**独立小窗**，主页面还留着。Chrome / Edge 会尽量用画中画，小窗可以浮在别的窗口上面；其他浏览器则开一个窄弹窗。若被拦截，允许本站弹出窗口即可。
+
+`overlay.html` 本身仍是一块透明玻璃小窗，只显示今天、逾期和陆续事项。顶部有拖动手柄，也方便以后嵌进 Electron。没有完整月历。
 
 ### Windows：PowerToys 置顶
 
-1. 用 Chrome / Edge 打开 [overlay.html](https://mostdesign01-sudo.github.io/jinri-todos/overlay.html)
+1. 在首页点「打开悬浮窗」，或用 Chrome / Edge 打开 [overlay.html](https://mostdesign01-sudo.github.io/jinri-todos/overlay.html)
 2. 安装 [PowerToys](https://learn.microsoft.com/windows/powertoys/)
 3. 选中窗口后按 `Ctrl + Win + T`（Always On Top）钉在最前
 

@@ -149,6 +149,13 @@
       }
     });
 
+    if (window.opener || window.name === "jinri-overlay" || window.parent !== window) {
+      document.documentElement.classList.add("is-float");
+    }
+    window.addEventListener("storage", (e) => {
+      if (e.key === Jinri.STORAGE_KEY) render();
+    });
+
     render();
   </script>
 </body>

@@ -4,6 +4,21 @@ html, body {
   padding: 0;
   overflow: hidden;
 }
+html.is-float, html.is-float body,
+html.is-float body.overlay {
+  background: #0b0d12 !important;
+}
+html.is-float .widget {
+  margin: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0;
+  border: 0;
+}
+@media (display-mode: picture-in-picture) {
+  html, body, body.overlay { background: #0b0d12 !important; }
+  .widget { margin: 0; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; }
+}
 body.overlay {
   min-height: 100dvh;
   color: var(--ink);
