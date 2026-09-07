@@ -186,7 +186,27 @@
         nativeSend("quit");
         try { window.close(); } catch (e) {}
       });
+      // 无边框窗口靠原生端拖动；按住手柄或标题区即可拖。
+      [document.querySelector(".drag-handle"), document.querySelector(".overlay-brand")].forEach((el) => {
+        el.addEventListener("mousedown", (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          nativeSend("drag");
+        });
+      });
+      window.__jinriImport = (text) => {
+        try {
+          Jinri.importJson(String(text || ""));
+          render();
+        } catch (err) {
+          alert("导入失败，请选今天待办导出的 JSON。");
+        }
+      };
       document.getElementById("native-export").addEventListener("click", () => {
+        if (nativeBridge()) {
+          nativeSend("export:" + Jinri.exportJson());
+          return;
+        }
         const blob = new Blob([Jinri.exportJson()], { type: "application/json" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -195,20 +215,17 @@
         URL.revokeObjectURL(a.href);
       });
       document.getElementById("native-import").addEventListener("click", () => {
+        if (nativeBridge()) {
+          nativeSend("import");
+          return;
+        }
         document.getElementById("native-import-file").click();
       });
       document.getElementById("native-import-file").addEventListener("change", (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            Jinri.importJson(String(reader.result || ""));
-            render();
-          } catch (err) {
-            alert("导入失败，请选今天待办导出的 JSON。");
-          }
-        };
+        reader.onload = () => window.__jinriImport(reader.result);
         reader.readAsText(file, "utf-8");
         e.target.value = "";
       });

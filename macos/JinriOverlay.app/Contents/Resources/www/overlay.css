@@ -49,6 +49,14 @@ html.native .widget {
   height: calc(100dvh - 28px);
   max-height: calc(100dvh - 28px);
 }
+html.native .drag-handle,
+html.native .overlay-brand {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+html.native .drag-handle:active,
+html.native .overlay-brand:active { cursor: grabbing; }
 
 .native-bar {
   display: flex;

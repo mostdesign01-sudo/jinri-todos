@@ -1,4 +1,4 @@
-const CACHE = "jinri-todos-v12";
+const CACHE = "jinri-todos-v13";
 const ASSETS = [
   "./",
   "index.html",

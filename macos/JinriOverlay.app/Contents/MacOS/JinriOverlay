@@ -1,6 +1,13 @@
 #!/bin/bash
 # 今日待办 · 无边框悬浮窗
 # 用系统 WKWebView 开窗口，不走 Chrome，所以没有系统白底和红绿灯。
-set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-exec /usr/bin/osascript -l JavaScript "$ROOT/Resources/overlay.js" "$ROOT"
+LOG="$HOME/Library/Application Support/jinri-todos/launch.log"
+mkdir -p "$(dirname "$LOG")"
+
+if ! /usr/bin/osascript -l JavaScript "$ROOT/Resources/overlay.js" "$ROOT" 2>"$LOG"; then
+  JINRI_ERR="$(head -c 700 "$LOG")"
+  export JINRI_ERR
+  /usr/bin/osascript -e 'display alert "今日待办悬浮窗没能打开" message ("错误：" & (system attribute "JINRI_ERR") & return & return & "可以把这段话发给我。")' >/dev/null 2>&1
+  exit 1
+fi
