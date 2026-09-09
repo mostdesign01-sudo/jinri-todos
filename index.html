@@ -74,7 +74,7 @@
       <div class="trash-box" id="trash-box" hidden></div>
       <div class="toolbar">
         <button type="button" class="btn" id="clear-samples" hidden>清示例</button>
-        <button type="button" class="btn" id="trash-btn" hidden>找回</button>
+        <button type="button" class="btn" id="trash-btn" hidden>最近删除</button>
         <button type="button" class="btn" id="export-btn">导出</button>
         <button type="button" class="btn" id="import-btn">导入</button>
         <input type="file" id="import-file" accept="application/json,.json" hidden />
@@ -107,7 +107,7 @@
         </div>
       </aside>
     </section>
-    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点「找回」，或按 Z 撤销。想浮在桌面上，点「钉在桌面」看步骤。数据只存在这台设备的浏览器里。</p>
+    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点底部提示条的「找回 / 撤销」，或按 Z 撤销；更早删掉的在「最近删除」里。想浮在桌面上，点「钉在桌面」看步骤。数据只存在这台设备的浏览器里。</p>
   </main>
   <div class="toast" id="toast" hidden>
     <span id="toast-text"></span>
@@ -272,8 +272,12 @@
       document.getElementById("toast-text").textContent = message;
       document.getElementById("toast-undo").textContent = kind === "delete" ? "找回" : "撤销";
       toast.hidden = false;
+      armToast();
+    }
+
+    function armToast() {
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => { toast.hidden = true; }, 8000);
+      toastTimer = setTimeout(() => { document.getElementById("toast").hidden = true; }, 15000);
     }
 
     function runUndo() {
@@ -396,6 +400,9 @@
       renderTrash();
     });
     document.getElementById("toast-undo").addEventListener("click", runUndo);
+    // 鼠标停在提示条上时不自动收起，移开后再重新计时。
+    document.getElementById("toast").addEventListener("mouseenter", () => clearTimeout(toastTimer));
+    document.getElementById("toast").addEventListener("mouseleave", armToast);
 
     document.getElementById("list").addEventListener("change", (e) => {
       if (!e.target.classList.contains("title")) return;
