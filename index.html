@@ -42,20 +42,7 @@
           <div class="pet-line" id="pet-line"></div>
           <button type="button" class="lantern" id="lantern" data-mood="idle" aria-label="提醒小鲨">
             <span class="lantern-say" id="lantern-say" hidden></span>
-            <svg class="lantern-svg" viewBox="0 0 72 80" aria-hidden="true">
-              <ellipse class="lantern-glow" cx="36" cy="46" rx="28" ry="24" />
-              <path class="shark-fin" d="M36 1l8 24H28z" />
-              <path class="shark-fin" d="M24 34L1 18 22 52z" />
-              <path class="shark-fin" d="M48 34l23-16L50 52z" />
-              <circle class="lantern-body" cx="36" cy="44" r="18.5" />
-              <path class="shark-snout" d="M36 59l11 16H25z" />
-              <ellipse class="bot-face" cx="36" cy="43" rx="13" ry="10.5" />
-              <ellipse class="lantern-eye" cx="30" cy="42.5" rx="3.5" ry="4.4" />
-              <ellipse class="lantern-eye" cx="42" cy="42.5" rx="3.5" ry="4.4" />
-              <circle class="eye-shine" cx="31.3" cy="41" r="1.15" />
-              <circle class="eye-shine" cx="43.3" cy="41" r="1.15" />
-              <path class="lantern-mouth" d="M32 50.5c2 2.3 6 2.3 8 0" />
-            </svg>
+            <img class="lantern-img" id="lantern-img" src="icons/xiaosha-idle.png" width="72" height="72" alt="" />
           </button>
         </div>
       </div>
@@ -318,6 +305,16 @@
       const el = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
       el.dataset.mood = pet.mood;
+      const faces = {
+        idle: "icons/xiaosha-idle.png",
+        dusk: "icons/xiaosha-nag.png",
+        night: "icons/xiaosha-nag.png",
+        overdue: "icons/xiaosha-nag.png",
+        done: "icons/xiaosha-done.png",
+      };
+      const img = document.getElementById("lantern-img");
+      const next = faces[pet.mood] || faces.idle;
+      if (img.getAttribute("src") !== next) img.src = next;
       const show = pet.mood === "dusk" || pet.mood === "night" || pet.mood === "overdue";
       say.hidden = !show;
       say.textContent = pet.text;
