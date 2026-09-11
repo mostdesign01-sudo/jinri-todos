@@ -4,12 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0d12" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="今日待办" />
   <title>今日待办</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="app">
@@ -68,7 +72,7 @@
     <section class="panel glass">
       <form class="add-row" id="add-form" autocomplete="off">
         <div class="prios" id="prios"></div>
-        <input id="title-input" class="title-input" name="title" maxlength="120" placeholder="写下今天要做的事，回车添加" />
+        <input id="title-input" class="title-input" name="title" maxlength="120" enterkeyhint="done" autocapitalize="sentences" placeholder="写下今天要做的事，回车添加" />
       </form>
       <div class="list" id="list"></div>
       <div class="trash-box" id="trash-box" hidden></div>
@@ -80,11 +84,22 @@
         <input type="file" id="import-file" accept="application/json,.json" hidden />
         <button type="button" class="btn" id="overlay-btn">打开悬浮窗</button>
         <button type="button" class="btn" id="pin-btn">钉在桌面</button>
+        <button type="button" class="btn" id="install-btn" hidden>装到手机</button>
         <span class="hint">N 聚焦 · 1–4 优先级 · ← → 换天 · Z 撤销</span>
       </div>
       <aside class="pin-help" id="pin-help" hidden>
-        <div class="sec-label">做成桌面小应用</div>
-        <p>网页开出来的小窗去不掉系统白底和标题栏。Mac 要无边框、浮在最前，请用下面的悬浮窗应用。</p>
+        <div class="sec-label" id="pin-help-title">做成桌面小应用</div>
+        <div id="pin-ios" hidden>
+          <p>用 Safari 打开本页，就能装到 iPhone / iPad 主屏幕，之后像独立 App 一样用：没有地址栏，图标是今日待办，数据还在这台手机里。</p>
+          <ol>
+            <li>用 <b>Safari</b> 打开（不要用微信、钉钉里的内置浏览器）。</li>
+            <li>点底部分享按钮 <b>□↑</b>。</li>
+            <li>下滑找到 <b>添加到主屏幕</b>，名称保持「今日待办」，点添加。</li>
+            <li>回主屏幕点新图标即可。以后改事项都在这个图标里，不必再打开浏览器。</li>
+          </ol>
+          <p>这不是 App Store 上架的原生应用。上架需要苹果开发者账号和 Xcode 打包，目前这套网页装到主屏幕已经能日常使用。</p>
+        </div>
+        <p id="pin-desk-lead">网页开出来的小窗去不掉系统白底和标题栏。Mac 要无边框、浮在最前，请用下面的悬浮窗应用。</p>
         <div id="pin-mac">
           <ol>
             <li><b>无边框悬浮窗：</b>下载 <a href="macos/JinriOverlay.zip">今日待办悬浮窗.app</a>（zip），解压后拖到「应用程序」或桌面，再拖进程序坞。不需要装 Chrome。这是系统窗口，没有红绿灯和浅色底框，并默认浮在其他软件上面。之前下过旧版的请删掉重下：旧版顶上有标题栏，新版顶上只有一排「置顶 导出 导入 关闭」。</li>
@@ -107,7 +122,7 @@
         </div>
       </aside>
     </section>
-    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点底部提示条的「找回 / 撤销」，或按 Z 撤销；更早删掉的在「最近删除」里。想浮在桌面上，点「钉在桌面」看步骤。数据只存在这台设备的浏览器里。</p>
+    <p class="foot">今天的清单会把后面几天的待办排在下面。误删或误勾可点底部提示条的「找回 / 撤销」，或按 Z 撤销；更早删掉的在「最近删除」里。iPhone 点「装到手机」，电脑点「钉在桌面」。数据只存在这台设备里。</p>
   </main>
   <div class="toast" id="toast" hidden>
     <span id="toast-text"></span>
@@ -472,15 +487,29 @@
     const pinHelp = document.getElementById("pin-help");
     const pinCmd = document.getElementById("pin-cmd-text");
     const overlayUrl = new URL("overlay.html", location.href).href;
-    const isMac = /Mac|iPhone|iPad/.test(navigator.platform + navigator.userAgent);
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isMac = /Mac/.test(navigator.platform + ua) && !isIOS;
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || !!navigator.standalone;
+    if (isIOS) document.body.classList.add("is-ios");
+    if (isStandalone) document.body.classList.add("is-standalone");
+    document.getElementById("overlay-btn").hidden = isIOS;
+    document.getElementById("pin-btn").hidden = isIOS;
+    document.getElementById("install-btn").hidden = !isIOS || isStandalone;
+    document.getElementById("pin-ios").hidden = !isIOS;
+    document.getElementById("pin-desk-lead").hidden = isIOS;
     document.getElementById("pin-mac").hidden = !isMac;
-    document.getElementById("pin-win").hidden = isMac;
+    document.getElementById("pin-win").hidden = isIOS || isMac;
+    document.querySelector(".pin-cmd").hidden = isIOS;
+    document.getElementById("pin-help-title").textContent = isIOS ? "装到 iPhone 主屏幕" : "做成桌面小应用";
     pinCmd.textContent = isMac
       ? "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --app=\"" + overlayUrl + "\""
       : "chrome --app=" + overlayUrl;
-    document.getElementById("pin-btn").addEventListener("click", () => {
+    function toggleHelp() {
       pinHelp.hidden = !pinHelp.hidden;
-    });
+    }
+    document.getElementById("pin-btn").addEventListener("click", toggleHelp);
+    document.getElementById("install-btn").addEventListener("click", toggleHelp);
     document.getElementById("pin-copy").addEventListener("click", async () => {
       const text = pinCmd.textContent;
       try {
