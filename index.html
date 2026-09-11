@@ -323,7 +323,7 @@
       const on = Jinri.remindOn();
       const bits = [];
       if (pet.streak) bits.push("连续" + pet.streak + "天");
-      bits.push(on ? "小鲨会催手机" : "点小鲨开提醒");
+      bits.push(on ? "小鲨会催手机" : "可开手机提醒");
       line.textContent = bits.join(" · ");
       document.getElementById("remind-btn").textContent = on ? "已开提醒" : "开手机提醒";
       syncAppBadge(pet);
@@ -413,7 +413,6 @@
         if (Date.now() >= pokeUntil) renderLantern();
       }, 1400);
       if (pet.mood === "overdue" || pet.mood === "night" || pet.mood === "dusk") jumpToday();
-      if (!Jinri.remindOn() && !remindPrompted) enablePetRemind();
     });
     document.getElementById("remind-btn").addEventListener("click", () => enablePetRemind(true));
     document.getElementById("cal-prev").addEventListener("click", () => {
