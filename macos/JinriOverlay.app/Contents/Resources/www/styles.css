@@ -187,21 +187,47 @@ h1 {
   right: -4px;
   bottom: -6px;
   width: 72px;
-  height: 72px;
+  height: 76px;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
-  z-index: 0;
+  z-index: 2;
 }
-.lantern-img {
+.pet-orb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 72px;
   height: 72px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, #fffdf6 0%, #ffe8a3 46%, #fbbf24 100%);
+  box-shadow:
+    0 10px 22px rgba(251, 191, 36, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  animation: pet-bounce 2.8s ease-in-out infinite;
+}
+.pet-fin {
+  position: absolute;
+  top: 4px;
+  width: 13px;
+  height: 15px;
+  background: linear-gradient(180deg, #ddd6fe, #7c3aed);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  z-index: 0;
+}
+.pet-fin-l { left: 6px; transform: rotate(-30deg); }
+.pet-fin-r { right: 6px; transform: rotate(30deg); }
+.lantern-img {
+  position: relative;
+  z-index: 1;
+  width: 48px;
+  height: 48px;
   display: block;
   object-fit: contain;
-  transform-origin: 50% 40%;
-  animation: lantern-sway 3.2s ease-in-out infinite;
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.28));
+  filter: drop-shadow(0 2px 4px rgba(120, 53, 15, 0.18));
 }
 .lantern-say {
   position: absolute;
@@ -217,14 +243,39 @@ h1 {
   pointer-events: none;
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
+.lantern[data-mood="dusk"] .pet-orb {
+  background: radial-gradient(circle at 32% 28%, #fff7ed 0%, #fdba74 58%, #fb923c 100%);
+  animation-duration: 2.2s;
+}
+.lantern[data-mood="night"] .pet-orb {
+  background: radial-gradient(circle at 32% 28%, #eef2ff 0%, #c4b5fd 55%, #818cf8 100%);
+  box-shadow: 0 10px 22px rgba(129, 140, 248, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.lantern[data-mood="overdue"] .pet-orb {
+  background: radial-gradient(circle at 32% 28%, #fff1f2 0%, #fda4af 55%, #fb7185 100%);
+  animation: pet-bounce 1.4s ease-in-out infinite, lantern-alert 1.5s ease-in-out infinite;
+}
+.lantern[data-mood="done"] .pet-orb {
+  background: radial-gradient(circle at 32% 28%, #ecfdf5 0%, #6ee7b7 55%, #34d399 100%);
+  animation-duration: 3.6s;
+}
+.lantern[data-mood="poke"] .pet-orb,
+.lantern.is-poke .pet-orb {
+  background: radial-gradient(circle at 32% 28%, #fff7ed 0%, #fde68a 50%, #f59e0b 100%);
+  animation: pet-hop 0.5s ease;
+}
 .lantern[data-mood="done"] .lantern-say { background: rgba(52, 211, 153, 0.9); color: #052e1c; }
-.lantern[data-mood="done"] .lantern-img { animation-duration: 5.5s; }
-.lantern[data-mood="dusk"] .lantern-img { animation-duration: 2.4s; }
-.lantern[data-mood="night"] .lantern-img,
-.lantern[data-mood="overdue"] .lantern-img { animation: lantern-sway 1.5s ease-in-out infinite, lantern-alert 1.5s ease-in-out infinite; }
 .lantern[data-mood="night"] .lantern-say,
 .lantern[data-mood="overdue"] .lantern-say { animation: lantern-pop 1.8s ease-in-out infinite; }
 
+@keyframes pet-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes pet-hop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-11px) scale(1.08); }
+}
 @keyframes lantern-sway {
   0%, 100% { transform: rotate(-6deg); }
   50% { transform: rotate(7deg); }
@@ -248,7 +299,7 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lantern-img, .lantern-say { animation: none !important; }
+  .pet-orb, .lantern-img, .lantern-say { animation: none !important; }
 }
 
 .panel {
@@ -649,6 +700,7 @@ h1 {
   .cal-nav-btn { width: 40px; height: 40px; }
   .empty { padding: 28px 10px 18px; font-size: 16px; }
   .hero-brand { padding-right: 58px; }
-  .lantern { width: 56px; height: 56px; }
-  .lantern-img { width: 56px; height: 56px; }
+  .lantern { width: 56px; height: 60px; }
+  .pet-orb { width: 56px; height: 56px; }
+  .lantern-img { width: 36px; height: 36px; }
 }

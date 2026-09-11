@@ -35,7 +35,11 @@
         </div>
         <button type="button" class="lantern lantern-sm" id="lantern" data-mood="idle" aria-label="提醒小鲨">
           <span class="lantern-say" id="lantern-say" hidden></span>
-          <img class="lantern-img" id="lantern-img" src="icons/xiaosha-idle.png" width="48" height="48" alt="" />
+          <span class="pet-orb" aria-hidden="true">
+            <span class="pet-fin pet-fin-l"></span>
+            <span class="pet-fin pet-fin-r"></span>
+            <img class="lantern-img" id="lantern-img" src="icons/pet-idle.svg" width="28" height="28" alt="" />
+          </span>
         </button>
         <div class="remain" id="remain"></div>
       </div>
@@ -75,20 +79,14 @@
       const state = Jinri.reminderState();
       const lantern = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
-      lantern.dataset.mood = state.mood;
-      const faces = {
-        idle: "icons/xiaosha-idle.png",
-        dusk: "icons/xiaosha-nag.png",
-        night: "icons/xiaosha-nag.png",
-        overdue: "icons/xiaosha-nag.png",
-        done: "icons/xiaosha-done.png",
-      };
+      const poking = lantern.classList.contains("is-poke");
+      lantern.dataset.mood = poking ? "poke" : state.mood;
       const img = document.getElementById("lantern-img");
-      const next = faces[state.mood] || faces.idle;
+      const next = Jinri.petFaceSrc(poking ? "poke" : state.mood);
       if (img && img.getAttribute("src") !== next) img.src = next;
-      const show = state.mood === "dusk" || state.mood === "night" || state.mood === "overdue";
+      const show = poking || state.mood === "dusk" || state.mood === "night" || state.mood === "overdue";
       say.hidden = !show;
-      say.textContent = state.text;
+      say.textContent = poking ? "加油！" : state.text;
       const list = document.getElementById("list");
       if (!n && !laterN) {
         list.innerHTML = `<div class="empty">空空的一天。</div>`;
@@ -128,6 +126,20 @@
     function escapeHtml(s) {
       return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
+
+    document.getElementById("lantern").addEventListener("click", () => {
+      const lantern = document.getElementById("lantern");
+      const say = document.getElementById("lantern-say");
+      lantern.classList.add("is-poke");
+      lantern.dataset.mood = "poke";
+      document.getElementById("lantern-img").src = Jinri.petFaceSrc("poke");
+      say.hidden = false;
+      say.textContent = "加油！";
+      setTimeout(() => {
+        lantern.classList.remove("is-poke");
+        render();
+      }, 1400);
+    });
 
     document.getElementById("add-form").addEventListener("submit", (e) => {
       e.preventDefault();
