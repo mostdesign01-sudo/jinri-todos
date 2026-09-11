@@ -1,4 +1,4 @@
-const CACHE = "jinri-todos-v17";
+const CACHE = "jinri-todos-v19";
 const ASSETS = [
   "./",
   "index.html",
@@ -10,7 +10,10 @@ const ASSETS = [
   "icon.svg",
   "apple-touch-icon.png",
   "icons/icon-192.png",
-  "icons/icon-512.png"
+  "icons/icon-512.png",
+  "icons/xiaosha-idle.png",
+  "icons/xiaosha-nag.png",
+  "icons/xiaosha-done.png"
 ];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -22,7 +25,7 @@ self.addEventListener("message", (e) => {
   const data = e.data || {};
   if (data.type !== "nag") return;
   e.waitUntil(
-    self.registration.showNotification(data.title || "灯笼在催你", {
+    self.registration.showNotification(data.title || "小鲨在催你", {
       body: data.body || "还有没做完的待办",
       icon: "./apple-touch-icon.png",
       badge: "./icons/icon-192.png",
