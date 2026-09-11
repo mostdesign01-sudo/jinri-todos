@@ -31,6 +31,7 @@
         </div>
         <div class="hero-brand">
           <h1>今日待办</h1>
+          <div class="pet-line" id="pet-line"></div>
           <button type="button" class="lantern" id="lantern" data-mood="idle" aria-label="提醒灯笼">
             <span class="lantern-say" id="lantern-say" hidden></span>
             <svg class="lantern-svg" viewBox="0 0 64 88" aria-hidden="true">
@@ -84,6 +85,7 @@
         <input type="file" id="import-file" accept="application/json,.json" hidden />
         <button type="button" class="btn" id="overlay-btn">打开悬浮窗</button>
         <button type="button" class="btn" id="pin-btn">钉在桌面</button>
+        <button type="button" class="btn" id="remind-btn">开手机提醒</button>
         <button type="button" class="btn" id="install-btn" hidden>装到手机</button>
         <span class="hint">N 聚焦 · 1–4 优先级 · ← → 换天 · Z 撤销</span>
       </div>
@@ -96,6 +98,7 @@
             <li>点底部分享按钮 <b>□↑</b>。</li>
             <li>下滑找到 <b>添加到主屏幕</b>，名称保持「今日待办」，点添加。</li>
             <li>回主屏幕点新图标即可。以后改事项都在这个图标里，不必再打开浏览器。</li>
+            <li>装好后再点「开手机提醒」，允许通知。灯笼会在傍晚、夜里或有逾期时催你，主屏幕图标也会标未完成件数。</li>
           </ol>
           <p>这不是 App Store 上架的原生应用。上架需要苹果开发者账号和 Xcode 打包，目前这套网页装到主屏幕已经能日常使用。</p>
         </div>
@@ -305,14 +308,58 @@
     }
 
     function renderLantern() {
-      const state = Jinri.reminderState();
+      const pet = Jinri.petSpeech();
       const el = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
-      el.dataset.mood = state.mood;
-      const show = state.mood === "dusk" || state.mood === "night" || state.mood === "overdue";
+      el.dataset.mood = pet.mood;
+      const show = pet.mood === "dusk" || pet.mood === "night" || pet.mood === "overdue";
       say.hidden = !show;
-      say.textContent = state.text;
-      el.setAttribute("aria-label", state.text ? "提醒：" + state.text : "提醒灯笼");
+      say.textContent = pet.text;
+      el.setAttribute("aria-label", pet.speech);
+      const line = document.getElementById("pet-line");
+      const on = Jinri.remindOn();
+      const bits = [];
+      if (pet.streak) bits.push("连续" + pet.streak + "天");
+      bits.push(on ? "灯笼会催手机" : "点灯笼开提醒");
+      line.textContent = bits.join(" · ");
+      document.getElementById("remind-btn").textContent = on ? "已开提醒" : "开手机提醒";
+      syncAppBadge(pet);
+      maybeSendNag();
+    }
+
+    function badgeCount() {
+      return Jinri.nowUnfinishedCount() + Jinri.overdueTodos().length;
+    }
+
+    function syncAppBadge(pet) {
+      if (!navigator.setAppBadge) return;
+      const n = pet && pet.mood === "done" ? 0 : badgeCount();
+      if (n > 0) navigator.setAppBadge(n);
+      else if (navigator.clearAppBadge) navigator.clearAppBadge();
+    }
+
+    function maybeSendNag() {
+      const payload = Jinri.maybeNag();
+      if (!payload) return;
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(payload);
+      } else if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        try { new Notification(payload.title, { body: payload.body, tag: "jinri-pet" }); } catch (e) {}
+      }
+    }
+
+    async function enablePetRemind() {
+      if (typeof Notification === "undefined") {
+        alert("这台设备不支持系统通知。灯笼仍会在页面里催你。");
+        return;
+      }
+      let perm = Notification.permission;
+      if (perm !== "granted") perm = await Notification.requestPermission();
+      Jinri.setRemindOn(perm === "granted");
+      if (perm !== "granted") {
+        alert("没打开通知。请用 Safari 把本页装到主屏幕，再允许通知。灯笼在页面里还是会说话。");
+      }
+      renderLantern();
     }
 
     function selectDate(date) {
@@ -334,12 +381,14 @@
     });
     document.getElementById("jump-today").addEventListener("click", jumpToday);
     document.getElementById("lantern").addEventListener("click", () => {
-      const state = Jinri.reminderState();
+      const pet = Jinri.petSpeech();
       const say = document.getElementById("lantern-say");
       say.hidden = false;
-      say.textContent = state.text || (state.mood === "idle" ? "还有" + Jinri.nowUnfinishedCount() + "件" : "都做完了");
-      if (state.mood === "overdue" || state.mood === "night" || state.mood === "dusk") jumpToday();
+      say.textContent = pet.speech;
+      if (pet.mood === "overdue" || pet.mood === "night" || pet.mood === "dusk") jumpToday();
+      if (!Jinri.remindOn()) enablePetRemind();
     });
+    document.getElementById("remind-btn").addEventListener("click", enablePetRemind);
     document.getElementById("cal-prev").addEventListener("click", () => {
       cal = Jinri.addMonths(cal.y, cal.m, -1);
       render();
@@ -562,6 +611,9 @@
     });
     render();
     setInterval(renderLantern, 60000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") renderLantern();
+    });
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js");
     }
