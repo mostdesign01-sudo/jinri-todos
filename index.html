@@ -402,7 +402,7 @@
       const pet = Jinri.petSpeech();
       const el = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
-      pokeUntil = Date.now() + 700;
+      pokeUntil = Date.now() + 1400;
       el.classList.add("is-poke");
       el.dataset.mood = "poke";
       document.getElementById("lantern-img").src = Jinri.petFaceSrc("poke");
@@ -411,7 +411,7 @@
       setTimeout(() => {
         el.classList.remove("is-poke");
         if (Date.now() >= pokeUntil) renderLantern();
-      }, 700);
+      }, 1400);
       if (pet.mood === "overdue" || pet.mood === "night" || pet.mood === "dusk") jumpToday();
       if (!Jinri.remindOn() && !remindPrompted) enablePetRemind();
     });

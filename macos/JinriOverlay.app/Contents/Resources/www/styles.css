@@ -192,7 +192,7 @@ h1 {
   border: 0;
   background: transparent;
   cursor: pointer;
-  z-index: 0;
+  z-index: 2;
 }
 .pet-orb {
   position: relative;
