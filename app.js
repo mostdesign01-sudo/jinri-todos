@@ -382,7 +382,7 @@ function maybeNag(opts) {
   const open = typeof (opts && opts.open) === "number" ? opts.open : nowUnfinishedCount();
   return {
     type: "nag",
-    title: "灯笼在催你",
+    title: "小鲨在催你",
     body: (state.text || "还有没做完的") + (overdue ? " · " + overdue + "件逾期" : " · 还有" + open + "件"),
     slot,
   };
@@ -526,7 +526,7 @@ function petSpeech(opts) {
   const lines = {
     idle: streak ? "连续" + streak + "天了，先做一件。" : "今天从一件开始。",
     dusk: "天快晚了，先做最要紧的一件。",
-    night: "还没做完。灯笼不睡。",
+    night: "还没做完。小鲨不睡。",
     overdue: "有逾期。先把过期的勾掉。",
     done: streak ? "都做完了。连续" + streak + "天。" : "都做完了。",
   };

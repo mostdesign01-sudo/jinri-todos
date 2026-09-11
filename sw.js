@@ -1,4 +1,4 @@
-const CACHE = "jinri-todos-v17";
+const CACHE = "jinri-todos-v18";
 const ASSETS = [
   "./",
   "index.html",
@@ -22,7 +22,7 @@ self.addEventListener("message", (e) => {
   const data = e.data || {};
   if (data.type !== "nag") return;
   e.waitUntil(
-    self.registration.showNotification(data.title || "灯笼在催你", {
+    self.registration.showNotification(data.title || "小鲨在催你", {
       body: data.body || "还有没做完的待办",
       icon: "./apple-touch-icon.png",
       badge: "./icons/icon-192.png",

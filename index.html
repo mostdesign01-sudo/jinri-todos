@@ -40,23 +40,21 @@
         <div class="hero-brand">
           <h1>今日待办</h1>
           <div class="pet-line" id="pet-line"></div>
-          <button type="button" class="lantern" id="lantern" data-mood="idle" aria-label="提醒灯笼">
+          <button type="button" class="lantern" id="lantern" data-mood="idle" aria-label="提醒小鲨">
             <span class="lantern-say" id="lantern-say" hidden></span>
-            <svg class="lantern-svg" viewBox="0 0 64 88" aria-hidden="true">
-              <line class="lantern-cord" x1="32" y1="2" x2="32" y2="12" />
-              <rect class="lantern-cap" x="22" y="10" width="20" height="6" rx="2" />
-              <ellipse class="lantern-glow" cx="32" cy="40" rx="22" ry="24" />
-              <path class="lantern-body" d="M16 22c0-2 4-4 16-4s16 2 16 4v32c0 8-6 14-16 14S16 62 16 54V22z" />
-              <path class="lantern-rib" d="M32 18v48M20 26c6 3 18 3 24 0M20 40c6 3 18 3 24 0M20 52c6 2 18 2 24 0" />
-              <g class="lantern-face">
-                <ellipse class="lantern-eye" cx="25" cy="38" rx="3.2" ry="3.6" />
-                <ellipse class="lantern-eye" cx="39" cy="38" rx="3.2" ry="3.6" />
-                <path class="lantern-mouth" d="M28 47c2 2.4 6 2.4 8 0" />
-              </g>
-              <ellipse class="lantern-flame" cx="32" cy="40" rx="5" ry="8" />
-              <rect class="lantern-base" x="24" y="66" width="16" height="5" rx="1.5" />
-              <path class="lantern-tassel" d="M32 71v10" />
-              <circle class="lantern-bead" cx="32" cy="83" r="2.2" />
+            <svg class="lantern-svg" viewBox="0 0 72 80" aria-hidden="true">
+              <ellipse class="lantern-glow" cx="36" cy="46" rx="28" ry="24" />
+              <path class="shark-fin" d="M36 4l10 22H26z" />
+              <path class="shark-fin" d="M15 30L2 16l20 22z" />
+              <path class="shark-fin" d="M57 30l13-14L50 38z" />
+              <circle class="lantern-body" cx="36" cy="44" r="18.5" />
+              <path class="shark-snout" d="M36 58l9 14H27z" />
+              <ellipse class="bot-face" cx="36" cy="43" rx="13" ry="10.5" />
+              <ellipse class="lantern-eye" cx="30" cy="42.5" rx="3.5" ry="4.4" />
+              <ellipse class="lantern-eye" cx="42" cy="42.5" rx="3.5" ry="4.4" />
+              <circle class="eye-shine" cx="31.3" cy="41" r="1.15" />
+              <circle class="eye-shine" cx="43.3" cy="41" r="1.15" />
+              <path class="lantern-mouth" d="M32 50.5c2 2.3 6 2.3 8 0" />
             </svg>
           </button>
         </div>
@@ -106,7 +104,7 @@
             <li>点底部分享按钮 <b>□↑</b>。</li>
             <li>下滑找到 <b>添加到主屏幕</b>，名称保持「今日待办」，点添加。</li>
             <li>回主屏幕点新图标即可。以后改事项都在这个图标里，不必再打开浏览器。</li>
-            <li>装好后再点「开手机提醒」，允许通知。灯笼会在傍晚、夜里或有逾期时催你，主屏幕图标也会标未完成件数。</li>
+            <li>装好后再点「开手机提醒」，允许通知。小鲨会在傍晚、夜里或有逾期时催你，主屏幕图标也会标未完成件数。</li>
           </ol>
           <p>这不是 App Store 上架的原生应用。上架需要苹果开发者账号和 Xcode 打包，目前这套网页装到主屏幕已经能日常使用。</p>
         </div>
@@ -328,7 +326,7 @@
       const on = Jinri.remindOn();
       const bits = [];
       if (pet.streak) bits.push("连续" + pet.streak + "天");
-      bits.push(on ? "灯笼会催手机" : "点灯笼开提醒");
+      bits.push(on ? "小鲨会催手机" : "点小鲨开提醒");
       line.textContent = bits.join(" · ");
       document.getElementById("remind-btn").textContent = on ? "已开提醒" : "开手机提醒";
       syncAppBadge(pet);
@@ -358,14 +356,14 @@
 
     async function enablePetRemind() {
       if (typeof Notification === "undefined") {
-        alert("这台设备不支持系统通知。灯笼仍会在页面里催你。");
+        alert("这台设备不支持系统通知。小鲨仍会在页面里催你。");
         return;
       }
       let perm = Notification.permission;
       if (perm !== "granted") perm = await Notification.requestPermission();
       Jinri.setRemindOn(perm === "granted");
       if (perm !== "granted") {
-        alert("没打开通知。请用 Safari 把本页装到主屏幕，再允许通知。灯笼在页面里还是会说话。");
+        alert("没打开通知。请用 Safari 把本页装到主屏幕，再允许通知。小鲨在页面里还是会说话。");
       }
       renderLantern();
     }

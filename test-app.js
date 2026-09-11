@@ -147,7 +147,7 @@ seed({
   remind: { on: true, lastNag: "", streak: 0, streakDate: "" },
 });
 const nag1 = Jinri.maybeNag({ hour: 18, overdue: 0, open: 1 });
-assert(nag1 && nag1.type === "nag" && nag1.title === "灯笼在催你", "enabled remind nags at dusk");
+assert(nag1 && nag1.type === "nag" && nag1.title === "小鲨在催你", "enabled remind nags at dusk");
 assert(Jinri.maybeNag({ hour: 18, overdue: 0, open: 1 }) === null, "same slot nags once");
 
 reset();

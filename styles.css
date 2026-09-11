@@ -142,7 +142,7 @@ body.app {
 .hero-brand {
   position: relative;
   display: inline-block;
-  padding-right: 58px;
+  padding-right: 72px;
 }
 .pet-line {
   margin-top: 6px;
@@ -184,10 +184,10 @@ h1 {
 
 .lantern {
   position: absolute;
-  right: 0;
-  bottom: -2px;
-  width: 52px;
-  height: 72px;
+  right: -4px;
+  bottom: -6px;
+  width: 62px;
+  height: 70px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -195,40 +195,37 @@ h1 {
   z-index: 0;
 }
 .lantern-svg {
-  width: 52px;
-  height: 72px;
+  width: 62px;
+  height: 70px;
   display: block;
   overflow: visible;
-  transform-origin: 50% 8px;
-  animation: lantern-sway 3.6s ease-in-out infinite;
+  transform-origin: 50% 28%;
+  animation: lantern-sway 3.2s ease-in-out infinite;
 }
-.lantern-cord, .lantern-rib, .lantern-tassel {
-  fill: none;
-  stroke: #fbbf24;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-}
-.lantern-rib { stroke: rgba(254, 243, 199, 0.45); stroke-width: 1.2; }
-.lantern-cap, .lantern-base, .lantern-bead { fill: #f59e0b; }
 .lantern-body {
-  fill: #fb7185;
-  stroke: #fda4af;
-  stroke-width: 1;
+  fill: #c7d2fe;
+  stroke: #eef2ff;
+  stroke-width: 1.4;
+}
+.shark-fin, .shark-snout {
+  fill: #818cf8;
+  stroke: #c7d2fe;
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+.bot-face {
+  fill: rgba(15, 23, 42, 0.18);
 }
 .lantern-glow {
-  fill: rgba(251, 191, 36, 0.22);
+  fill: rgba(165, 180, 252, 0.28);
   animation: lantern-breathe 2.8s ease-in-out infinite;
 }
-.lantern-flame {
-  fill: #fde68a;
-  opacity: 0.35;
-  animation: lantern-flicker 1.4s ease-in-out infinite;
-}
-.lantern-eye { fill: #1f2937; }
+.lantern-eye { fill: #0f172a; }
+.eye-shine { fill: #f8fafc; }
 .lantern-mouth {
   fill: none;
-  stroke: #1f2937;
-  stroke-width: 1.5;
+  stroke: #0f172a;
+  stroke-width: 1.6;
   stroke-linecap: round;
 }
 .lantern-say {
@@ -245,17 +242,25 @@ h1 {
   pointer-events: none;
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
-.lantern[data-mood="done"] .lantern-body { fill: #64748b; stroke: #94a3b8; }
+.lantern[data-mood="done"] .lantern-body { fill: #94a3b8; stroke: #cbd5e1; }
+.lantern[data-mood="done"] .shark-fin,
+.lantern[data-mood="done"] .shark-snout { fill: #64748b; stroke: #94a3b8; }
 .lantern[data-mood="done"] .lantern-glow { opacity: 0.25; }
-.lantern[data-mood="done"] .lantern-eye { ry: 0.7; }
-.lantern[data-mood="done"] .lantern-mouth { d: path("M28 47c2-1.2 6-1.2 8 0"); }
+.lantern[data-mood="done"] .lantern-eye { ry: 0.8; }
+.lantern[data-mood="done"] .lantern-mouth { d: path("M32 51.5c2-1.4 6-1.4 8 0"); }
 .lantern[data-mood="done"] .lantern-say { background: rgba(52, 211, 153, 0.9); color: #052e1c; }
 .lantern[data-mood="done"] .lantern-svg { animation-duration: 5.5s; }
-.lantern[data-mood="dusk"] .lantern-body { fill: #fb923c; stroke: #fdba74; }
+.lantern[data-mood="dusk"] .lantern-body { fill: #fdba74; stroke: #ffedd5; }
+.lantern[data-mood="dusk"] .shark-fin,
+.lantern[data-mood="dusk"] .shark-snout { fill: #fb923c; stroke: #fdba74; }
 .lantern[data-mood="dusk"] .lantern-glow { fill: rgba(251, 146, 60, 0.38); }
 .lantern[data-mood="dusk"] .lantern-svg { animation-duration: 2.4s; }
 .lantern[data-mood="night"] .lantern-body,
-.lantern[data-mood="overdue"] .lantern-body { fill: #fb7185; stroke: #fecdd3; }
+.lantern[data-mood="overdue"] .lantern-body { fill: #fda4af; stroke: #ffe4e6; }
+.lantern[data-mood="night"] .shark-fin,
+.lantern[data-mood="night"] .shark-snout,
+.lantern[data-mood="overdue"] .shark-fin,
+.lantern[data-mood="overdue"] .shark-snout { fill: #fb7185; stroke: #fecdd3; }
 .lantern[data-mood="night"] .lantern-glow,
 .lantern[data-mood="overdue"] .lantern-glow {
   fill: rgba(251, 113, 133, 0.5);
@@ -289,7 +294,7 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lantern-svg, .lantern-glow, .lantern-flame, .lantern-say { animation: none !important; }
+  .lantern-svg, .lantern-glow, .lantern-say { animation: none !important; }
 }
 
 .panel {
@@ -689,7 +694,7 @@ h1 {
   .cal-grid.week .cal-day { min-height: 46px; }
   .cal-nav-btn { width: 40px; height: 40px; }
   .empty { padding: 28px 10px 18px; font-size: 16px; }
-  .hero-brand { padding-right: 48px; }
-  .lantern { width: 44px; height: 62px; }
-  .lantern-svg { width: 44px; height: 62px; }
+  .hero-brand { padding-right: 58px; }
+  .lantern { width: 52px; height: 58px; }
+  .lantern-svg { width: 52px; height: 58px; }
 }
