@@ -526,11 +526,25 @@ function petSpeech(opts) {
   const lines = {
     idle: streak ? "连续" + streak + "天了，先做一件。" : "今天从一件开始。",
     dusk: "天快晚了，先做最要紧的一件。",
-    night: "还没做完。小鲨不睡。",
+    night: "还没做完。小鲨陪着。",
     overdue: "有逾期。先把过期的勾掉。",
     done: streak ? "都做完了。连续" + streak + "天。" : "都做完了。",
   };
   return Object.assign({}, state, { speech: lines[state.mood] || state.text, streak });
+}
+
+// Twemoji 14.0.2 (CC-BY 4.0, Twitter, Inc and contributors)
+const PET_FACES = {
+  idle: "icons/pet-idle.svg",
+  dusk: "icons/pet-dusk.svg",
+  night: "icons/pet-night.svg",
+  overdue: "icons/pet-overdue.svg",
+  done: "icons/pet-done.svg",
+  poke: "icons/pet-poke.svg",
+};
+
+function petFaceSrc(mood) {
+  return PET_FACES[mood] || PET_FACES.idle;
 }
 
 const JinriAPI = {
@@ -575,6 +589,8 @@ const JinriAPI = {
   shanghaiHour,
   reminderState,
   petSpeech,
+  PET_FACES,
+  petFaceSrc,
   streakCount,
   remindOn,
   setRemindOn,

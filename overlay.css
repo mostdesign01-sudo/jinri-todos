@@ -147,7 +147,9 @@ html.native .overlay-brand:active { cursor: grabbing; }
   flex-shrink: 0;
   margin: 0 4px 0 auto;
 }
-.widget .lantern-sm .lantern-img { width: 40px; height: 40px; }
+.widget .lantern-sm .pet-orb { width: 40px; height: 40px; }
+.widget .lantern-sm .pet-fin { width: 8px; height: 10px; top: 2px; }
+.widget .lantern-sm .lantern-img { width: 26px; height: 26px; }
 .widget .lantern-say { top: -10px; right: -18px; font-size: 10px; padding: 2px 6px; }
 .overlay-date {
   font-size: 11px;

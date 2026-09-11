@@ -42,7 +42,11 @@
           <div class="pet-line" id="pet-line"></div>
           <button type="button" class="lantern" id="lantern" data-mood="idle" aria-label="提醒小鲨">
             <span class="lantern-say" id="lantern-say" hidden></span>
-            <img class="lantern-img" id="lantern-img" src="icons/xiaosha-idle.png" width="72" height="72" alt="" />
+            <span class="pet-orb" aria-hidden="true">
+              <span class="pet-fin pet-fin-l"></span>
+              <span class="pet-fin pet-fin-r"></span>
+              <img class="lantern-img" id="lantern-img" src="icons/pet-idle.svg" width="48" height="48" alt="" />
+            </span>
           </button>
         </div>
       </div>
@@ -300,24 +304,20 @@
       render();
     }
 
+    let pokeUntil = 0;
+
     function renderLantern() {
       const pet = Jinri.petSpeech();
       const el = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
-      el.dataset.mood = pet.mood;
-      const faces = {
-        idle: "icons/xiaosha-idle.png",
-        dusk: "icons/xiaosha-nag.png",
-        night: "icons/xiaosha-nag.png",
-        overdue: "icons/xiaosha-nag.png",
-        done: "icons/xiaosha-done.png",
-      };
+      const poking = Date.now() < pokeUntil;
+      el.dataset.mood = poking ? "poke" : pet.mood;
       const img = document.getElementById("lantern-img");
-      const next = faces[pet.mood] || faces.idle;
+      const next = Jinri.petFaceSrc(poking ? "poke" : pet.mood);
       if (img.getAttribute("src") !== next) img.src = next;
-      const show = pet.mood === "dusk" || pet.mood === "night" || pet.mood === "overdue";
+      const show = poking || pet.mood === "dusk" || pet.mood === "night" || pet.mood === "overdue";
       say.hidden = !show;
-      say.textContent = pet.text;
+      say.textContent = poking ? "加油！" : pet.text;
       el.setAttribute("aria-label", pet.speech);
       const line = document.getElementById("pet-line");
       const on = Jinri.remindOn();
@@ -385,9 +385,18 @@
     document.getElementById("jump-today").addEventListener("click", jumpToday);
     document.getElementById("lantern").addEventListener("click", () => {
       const pet = Jinri.petSpeech();
+      const el = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
+      pokeUntil = Date.now() + 700;
+      el.classList.add("is-poke");
+      el.dataset.mood = "poke";
+      document.getElementById("lantern-img").src = Jinri.petFaceSrc("poke");
       say.hidden = false;
-      say.textContent = pet.speech;
+      say.textContent = pet.mood === "done" ? pet.speech : "加油！";
+      setTimeout(() => {
+        el.classList.remove("is-poke");
+        if (Date.now() >= pokeUntil) renderLantern();
+      }, 700);
       if (pet.mood === "overdue" || pet.mood === "night" || pet.mood === "dusk") jumpToday();
       if (!Jinri.remindOn()) enablePetRemind();
     });

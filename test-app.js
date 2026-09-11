@@ -128,6 +128,10 @@ assert(Jinri.reminderState({ hour: 10, overdue: 1, open: 1 }).mood === "overdue"
 assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 0 }).mood === "done", "none left is done");
 assert(Jinri.reminderState({ hour: 18, overdue: 0, open: 2 }).text === "天快晚了", "dusk copy");
 assert(Jinri.petSpeech({ hour: 18, overdue: 0, open: 2, streak: 3 }).speech.indexOf("天快晚了") === 0, "pet dusk speech");
+assert(Jinri.petFaceSrc("idle") === "icons/pet-idle.svg", "idle emoji face");
+assert(Jinri.petFaceSrc("night") === "icons/pet-night.svg", "night emoji face");
+assert(Jinri.petFaceSrc("poke") === "icons/pet-poke.svg", "poke emoji face");
+assert(Jinri.petFaceSrc("missing") === "icons/pet-idle.svg", "unknown mood falls back");
 assert(Jinri.nagSlot({ mood: "dusk" }, today) === today + "-dusk", "nag slot dusk");
 assert(Jinri.nagSlot({ mood: "idle" }, today) === "", "idle has no nag");
 
