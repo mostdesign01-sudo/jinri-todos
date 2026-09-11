@@ -351,15 +351,36 @@
       }
     }
 
-    async function enablePetRemind() {
+    let remindPrompted = false;
+
+    async function enablePetRemind(force) {
       if (typeof Notification === "undefined") {
-        alert("这台设备不支持系统通知。小鲨仍会在页面里催你。");
+        if (force || !remindPrompted) {
+          remindPrompted = true;
+          alert("这台设备不支持系统通知。小鲨仍会在页面里催你。");
+        }
         return;
       }
       let perm = Notification.permission;
-      if (perm !== "granted") perm = await Notification.requestPermission();
-      Jinri.setRemindOn(perm === "granted");
+      if (perm === "denied") {
+        Jinri.setRemindOn(false);
+        if (force || !remindPrompted) {
+          remindPrompted = true;
+          alert("没打开通知。请用 Safari 把本页装到主屏幕，再允许通知。小鲨在页面里还是会说话。");
+        }
+        renderLantern();
+        return;
+      }
       if (perm !== "granted") {
+        if (remindPrompted && !force) {
+          renderLantern();
+          return;
+        }
+        remindPrompted = true;
+        perm = await Notification.requestPermission();
+      }
+      Jinri.setRemindOn(perm === "granted");
+      if (perm !== "granted" && force) {
         alert("没打开通知。请用 Safari 把本页装到主屏幕，再允许通知。小鲨在页面里还是会说话。");
       }
       renderLantern();
@@ -398,9 +419,9 @@
         if (Date.now() >= pokeUntil) renderLantern();
       }, 700);
       if (pet.mood === "overdue" || pet.mood === "night" || pet.mood === "dusk") jumpToday();
-      if (!Jinri.remindOn()) enablePetRemind();
+      if (!Jinri.remindOn() && !remindPrompted) enablePetRemind();
     });
-    document.getElementById("remind-btn").addEventListener("click", enablePetRemind);
+    document.getElementById("remind-btn").addEventListener("click", () => enablePetRemind(true));
     document.getElementById("cal-prev").addEventListener("click", () => {
       cal = Jinri.addMonths(cal.y, cal.m, -1);
       render();
