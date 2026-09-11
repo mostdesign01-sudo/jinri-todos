@@ -111,6 +111,12 @@ body.app {
   display: inline-block;
   padding-right: 58px;
 }
+.pet-line {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
 h1 {
   font-family: var(--heiti);
   font-weight: 800;

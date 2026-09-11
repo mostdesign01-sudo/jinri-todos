@@ -127,6 +127,36 @@ assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 1 }).mood === "night", 
 assert(Jinri.reminderState({ hour: 10, overdue: 1, open: 1 }).mood === "overdue", "overdue wins over hour");
 assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 0 }).mood === "done", "none left is done");
 assert(Jinri.reminderState({ hour: 18, overdue: 0, open: 2 }).text === "天快晚了", "dusk copy");
+assert(Jinri.petSpeech({ hour: 18, overdue: 0, open: 2, streak: 3 }).speech.indexOf("天快晚了") === 0, "pet dusk speech");
+assert(Jinri.nagSlot({ mood: "dusk" }, today) === today + "-dusk", "nag slot dusk");
+assert(Jinri.nagSlot({ mood: "idle" }, today) === "", "idle has no nag");
+
+reset();
+seed({
+  lastDate: today,
+  todos: [{ id: "s1", title: "打卡", priority: "medium", done: false, createdAt: 1, date: today }],
+  remind: { on: false, lastNag: "", streak: 2, streakDate: yesterday },
+});
+Jinri.toggleTodo("s1");
+assert(Jinri.streakCount(today) === 3, "completing continues streak");
+
+reset();
+seed({
+  lastDate: today,
+  todos: [{ id: "open1", title: "还在", priority: "low", done: false, createdAt: 1, date: today }],
+  remind: { on: true, lastNag: "", streak: 0, streakDate: "" },
+});
+const nag1 = Jinri.maybeNag({ hour: 18, overdue: 0, open: 1 });
+assert(nag1 && nag1.type === "nag" && nag1.title === "灯笼在催你", "enabled remind nags at dusk");
+assert(Jinri.maybeNag({ hour: 18, overdue: 0, open: 1 }) === null, "same slot nags once");
+
+reset();
+seed({
+  lastDate: today,
+  todos: [{ id: "open2", title: "还在", priority: "low", done: false, createdAt: 1, date: today }],
+  remind: { on: false, lastNag: "", streak: 0, streakDate: "" },
+});
+assert(Jinri.maybeNag({ hour: 22, overdue: 0, open: 1 }) === null, "remind off does not nag");
 
 reset();
 seed({

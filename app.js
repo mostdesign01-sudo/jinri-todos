@@ -135,9 +135,23 @@ function sampleTodos(today) {
   ];
 }
 
+function emptyRemind() {
+  return { on: false, lastNag: "", streak: 0, streakDate: "" };
+}
+
+function normalizeRemind(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  return {
+    on: !!r.on,
+    lastNag: typeof r.lastNag === "string" ? r.lastNag : "",
+    streak: Math.max(0, Number(r.streak) || 0),
+    streakDate: isDateStr(r.streakDate) ? r.streakDate : "",
+  };
+}
+
 function emptyData() {
   const today = shanghaiDateStr();
-  return { version: DATA_VERSION, lastDate: today, todos: sampleTodos(today), trash: [] };
+  return { version: DATA_VERSION, lastDate: today, todos: sampleTodos(today), trash: [], remind: emptyRemind() };
 }
 
 function loadRaw() {
@@ -188,6 +202,7 @@ function migrate(data) {
     })
     .filter((t) => t.deletedAt >= cutoff)
     .slice(-40);
+  data.remind = normalizeRemind(data.remind);
   data.version = DATA_VERSION;
   data.lastDate = today;
   return data;
@@ -304,11 +319,73 @@ function toggleTodo(id) {
   const item = data.todos.find((t) => t.id === id);
   if (item) {
     item.done = !item.done;
-    if (item.done) item.doneDate = shanghaiDateStr();
-    else delete item.doneDate;
+    if (item.done) {
+      item.doneDate = shanghaiDateStr();
+      if (!item.sample) touchStreak(data, item.doneDate);
+    } else delete item.doneDate;
   }
   persist(data);
   return data;
+}
+
+function touchStreak(data, today) {
+  const r = normalizeRemind(data.remind);
+  if (r.streakDate === today) {
+    data.remind = r;
+    return r;
+  }
+  r.streak = r.streakDate === addDays(today, -1) ? r.streak + 1 : 1;
+  r.streakDate = today;
+  data.remind = r;
+  return r;
+}
+
+function streakCount(today) {
+  const day = isDateStr(today) ? today : shanghaiDateStr();
+  const r = normalizeRemind(load().remind);
+  if (r.streakDate === day || r.streakDate === addDays(day, -1)) return r.streak;
+  return 0;
+}
+
+function remindOn() {
+  return normalizeRemind(load().remind).on;
+}
+
+function setRemindOn(on) {
+  const data = load();
+  data.remind = normalizeRemind(data.remind);
+  data.remind.on = !!on;
+  persist(data);
+  return data.remind;
+}
+
+function nagSlot(state, today) {
+  const day = isDateStr(today) ? today : shanghaiDateStr();
+  const mood = state && state.mood;
+  if (mood === "overdue") return day + "-overdue";
+  if (mood === "night") return day + "-night";
+  if (mood === "dusk") return day + "-dusk";
+  return "";
+}
+
+function maybeNag(opts) {
+  const data = load();
+  const remind = normalizeRemind(data.remind);
+  if (!remind.on) return null;
+  const state = reminderState(opts);
+  const slot = nagSlot(state, shanghaiDateStr(opts && opts.now));
+  if (!slot || remind.lastNag === slot) return null;
+  remind.lastNag = slot;
+  data.remind = remind;
+  persist(data);
+  const overdue = typeof (opts && opts.overdue) === "number" ? opts.overdue : overdueTodos().length;
+  const open = typeof (opts && opts.open) === "number" ? opts.open : nowUnfinishedCount();
+  return {
+    type: "nag",
+    title: "灯笼在催你",
+    body: (state.text || "还有没做完的") + (overdue ? " · " + overdue + "件逾期" : " · 还有" + open + "件"),
+    slot,
+  };
 }
 
 function deleteTodo(id) {
@@ -386,6 +463,7 @@ function exportJson() {
       lastDate: data.lastDate,
       todos: data.todos,
       trash: data.trash || [],
+      remind: normalizeRemind(data.remind),
     },
     null,
     2
@@ -408,7 +486,8 @@ function importJson(text) {
           item.deletedAt = Number(t.deletedAt) || Date.now();
           return item;
         })
-      : [],
+        : [],
+    remind: normalizeRemind(parsed && parsed.remind),
   };
   persist(data);
   return load();
@@ -439,6 +518,19 @@ function reminderState(opts) {
   if (hour >= 21) return { mood: "night", hour, text: "还没做完" };
   if (hour >= 17) return { mood: "dusk", hour, text: "天快晚了" };
   return { mood: "idle", hour, text: "" };
+}
+
+function petSpeech(opts) {
+  const state = reminderState(opts);
+  const streak = typeof (opts && opts.streak) === "number" ? opts.streak : streakCount();
+  const lines = {
+    idle: streak ? "连续" + streak + "天了，先做一件。" : "今天从一件开始。",
+    dusk: "天快晚了，先做最要紧的一件。",
+    night: "还没做完。灯笼不睡。",
+    overdue: "有逾期。先把过期的勾掉。",
+    done: streak ? "都做完了。连续" + streak + "天。" : "都做完了。",
+  };
+  return Object.assign({}, state, { speech: lines[state.mood] || state.text, streak });
 }
 
 const JinriAPI = {
@@ -482,6 +574,12 @@ const JinriAPI = {
   priorityLabel,
   shanghaiHour,
   reminderState,
+  petSpeech,
+  streakCount,
+  remindOn,
+  setRemindOn,
+  nagSlot,
+  maybeNag,
 };
 
 root.Jinri = JinriAPI;
