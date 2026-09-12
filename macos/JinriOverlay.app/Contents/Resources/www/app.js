@@ -533,18 +533,46 @@ function petSpeech(opts) {
   return Object.assign({}, state, { speech: lines[state.mood] || state.text, streak });
 }
 
-// Twemoji 14.0.2 (CC-BY 4.0, Twitter, Inc and contributors)
-const PET_FACES = {
-  idle: "icons/pet-idle.svg",
-  dusk: "icons/pet-dusk.svg",
-  night: "icons/pet-night.svg",
-  overdue: "icons/pet-overdue.svg",
-  done: "icons/pet-done.svg",
-  poke: "icons/pet-poke.svg",
+const PET_STYLE_KEY = "jinri-pet-style";
+const PET_STYLES = {
+  "3d": {
+    idle: "icons/face3d-idle.png",
+    dusk: "icons/face3d-dusk.png",
+    night: "icons/face3d-night.png",
+    overdue: "icons/face3d-overdue.png",
+    done: "icons/face3d-done.png",
+    poke: "icons/face3d-poke.png",
+  },
+  pixel: {
+    idle: "icons/facepx-idle.png",
+    dusk: "icons/facepx-dusk.png",
+    night: "icons/facepx-night.png",
+    overdue: "icons/facepx-overdue.png",
+    done: "icons/facepx-done.png",
+    poke: "icons/facepx-poke.png",
+  },
 };
+const PET_FACES = PET_STYLES["3d"];
 
-function petFaceSrc(mood) {
-  return PET_FACES[mood] || PET_FACES.idle;
+function petStyle() {
+  try {
+    return localStorage.getItem(PET_STYLE_KEY) === "pixel" ? "pixel" : "3d";
+  } catch (e) {
+    return "3d";
+  }
+}
+
+function setPetStyle(style) {
+  const next = style === "pixel" ? "pixel" : "3d";
+  try {
+    localStorage.setItem(PET_STYLE_KEY, next);
+  } catch (e) {}
+  return next;
+}
+
+function petFaceSrc(mood, style) {
+  const pack = PET_STYLES[style || petStyle()] || PET_STYLES["3d"];
+  return pack[mood] || pack.idle;
 }
 
 const JinriAPI = {
@@ -589,7 +617,11 @@ const JinriAPI = {
   shanghaiHour,
   reminderState,
   petSpeech,
+  PET_STYLE_KEY,
+  PET_STYLES,
   PET_FACES,
+  petStyle,
+  setPetStyle,
   petFaceSrc,
   streakCount,
   remindOn,

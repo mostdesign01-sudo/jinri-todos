@@ -40,12 +40,14 @@
         <div class="hero-brand">
           <h1>今日待办</h1>
           <div class="pet-line" id="pet-line"></div>
-          <button type="button" class="lantern" id="lantern" data-mood="idle" aria-label="提醒小鲨">
+          <div class="pet-styles" id="pet-styles">
+            <button type="button" class="pet-style" data-style="3d">立体</button>
+            <button type="button" class="pet-style" data-style="pixel">像素</button>
+          </div>
+          <button type="button" class="lantern" id="lantern" data-mood="idle" data-style="3d" aria-label="提醒小鲨">
             <span class="lantern-say" id="lantern-say" hidden></span>
             <span class="pet-orb" aria-hidden="true">
-              <span class="pet-fin pet-fin-l"></span>
-              <span class="pet-fin pet-fin-r"></span>
-              <img class="lantern-img" id="lantern-img" src="icons/pet-idle.svg" width="48" height="48" alt="" />
+              <img class="lantern-img" id="lantern-img" src="icons/face3d-idle.png" width="72" height="72" alt="" />
             </span>
           </button>
         </div>
@@ -310,10 +312,12 @@
       const pet = Jinri.petSpeech();
       const el = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
+      const style = Jinri.petStyle();
       const poking = Date.now() < pokeUntil;
       el.dataset.mood = poking ? "poke" : pet.mood;
+      el.dataset.style = style;
       const img = document.getElementById("lantern-img");
-      const next = Jinri.petFaceSrc(poking ? "poke" : pet.mood);
+      const next = Jinri.petFaceSrc(poking ? "poke" : pet.mood, style);
       if (img.getAttribute("src") !== next) img.src = next;
       const show = poking || pet.mood === "dusk" || pet.mood === "night" || pet.mood === "overdue";
       say.hidden = !show;
@@ -325,6 +329,9 @@
       if (pet.streak) bits.push("连续" + pet.streak + "天");
       bits.push(on ? "小鲨会催手机" : "可开手机提醒");
       line.textContent = bits.join(" · ");
+      document.querySelectorAll("#pet-styles .pet-style").forEach((btn) => {
+        btn.classList.toggle("on", btn.dataset.style === style);
+      });
       document.getElementById("remind-btn").textContent = on ? "已开提醒" : "开手机提醒";
       syncAppBadge(pet);
       maybeSendNag();
@@ -413,6 +420,12 @@
         if (Date.now() >= pokeUntil) renderLantern();
       }, 1400);
       if (pet.mood === "overdue" || pet.mood === "night" || pet.mood === "dusk") jumpToday();
+    });
+    document.getElementById("pet-styles").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-style]");
+      if (!btn) return;
+      Jinri.setPetStyle(btn.dataset.style);
+      renderLantern();
     });
     document.getElementById("remind-btn").addEventListener("click", () => enablePetRemind(true));
     document.getElementById("cal-prev").addEventListener("click", () => {
