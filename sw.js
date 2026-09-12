@@ -1,4 +1,4 @@
-const CACHE = "jinri-todos-v22";
+const CACHE = "jinri-todos-v23";
 const ASSETS = [
   "./",
   "index.html",
@@ -11,12 +11,18 @@ const ASSETS = [
   "apple-touch-icon.png",
   "icons/icon-192.png",
   "icons/icon-512.png",
-  "icons/pet-idle.svg",
-  "icons/pet-dusk.svg",
-  "icons/pet-night.svg",
-  "icons/pet-overdue.svg",
-  "icons/pet-done.svg",
-  "icons/pet-poke.svg"
+  "icons/face3d-idle.png",
+  "icons/face3d-dusk.png",
+  "icons/face3d-night.png",
+  "icons/face3d-overdue.png",
+  "icons/face3d-done.png",
+  "icons/face3d-poke.png",
+  "icons/facepx-idle.png",
+  "icons/facepx-dusk.png",
+  "icons/facepx-night.png",
+  "icons/facepx-overdue.png",
+  "icons/facepx-done.png",
+  "icons/facepx-poke.png"
 ];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

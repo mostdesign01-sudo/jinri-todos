@@ -33,12 +33,10 @@
           <h1>今日待办</h1>
           <div class="overlay-date" id="overlay-date"></div>
         </div>
-        <button type="button" class="lantern lantern-sm" id="lantern" data-mood="idle" aria-label="提醒小鲨">
+        <button type="button" class="lantern lantern-sm" id="lantern" data-mood="idle" data-style="3d" aria-label="提醒小鲨">
           <span class="lantern-say" id="lantern-say" hidden></span>
           <span class="pet-orb" aria-hidden="true">
-            <span class="pet-fin pet-fin-l"></span>
-            <span class="pet-fin pet-fin-r"></span>
-            <img class="lantern-img" id="lantern-img" src="icons/pet-idle.svg" width="28" height="28" alt="" />
+            <img class="lantern-img" id="lantern-img" src="icons/face3d-idle.png" width="40" height="40" alt="" />
           </span>
         </button>
         <div class="remain" id="remain"></div>
@@ -80,9 +78,11 @@
       const lantern = document.getElementById("lantern");
       const say = document.getElementById("lantern-say");
       const poking = lantern.classList.contains("is-poke");
+      const style = Jinri.petStyle();
       lantern.dataset.mood = poking ? "poke" : state.mood;
+      lantern.dataset.style = style;
       const img = document.getElementById("lantern-img");
-      const next = Jinri.petFaceSrc(poking ? "poke" : state.mood);
+      const next = Jinri.petFaceSrc(poking ? "poke" : state.mood, style);
       if (img && img.getAttribute("src") !== next) img.src = next;
       const show = poking || state.mood === "dusk" || state.mood === "night" || state.mood === "overdue";
       say.hidden = !show;
