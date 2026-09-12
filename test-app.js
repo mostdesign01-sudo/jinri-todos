@@ -135,6 +135,8 @@ assert(Jinri.petFaceSrc("missing", "3d") === "icons/face3d-idle.png", "unknown m
 assert(Jinri.setPetStyle("pixel") === "pixel", "stores pixel style");
 assert(Jinri.petStyle() === "pixel", "reads pixel style");
 assert(Jinri.setPetStyle("3d") === "3d", "stores 3d style");
+assert(typeof Jinri.nativeBridge === "function" && Jinri.nativeBridge() === null, "no native bridge in node");
+assert(Jinri.isNativeShell() === false, "node is not the Mac shell");
 assert(Jinri.nagSlot({ mood: "dusk" }, today) === today + "-dusk", "nag slot dusk");
 assert(Jinri.nagSlot({ mood: "idle" }, today) === "", "idle has no nag");
 

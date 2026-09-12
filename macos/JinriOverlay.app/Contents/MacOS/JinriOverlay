@@ -1,5 +1,5 @@
 #!/bin/bash
-# 今日待办 · 无边框悬浮窗
+# 今日待办 · 无边框桌面应用
 # 用系统 WKWebView 开窗口，不走 Chrome，所以没有系统白底和红绿灯。
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LOG="$HOME/Library/Application Support/jinri-todos/launch.log"

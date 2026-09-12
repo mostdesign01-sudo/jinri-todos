@@ -575,6 +575,27 @@ function petFaceSrc(mood, style) {
   return pack[mood] || pack.idle;
 }
 
+function nativeBridge() {
+  try {
+    if (typeof window === "undefined") return null;
+    return window.webkit && webkit.messageHandlers && webkit.messageHandlers.jinri;
+  } catch (e) {
+    return null;
+  }
+}
+
+function nativeSend(msg) {
+  const bridge = nativeBridge();
+  if (bridge) bridge.postMessage(msg);
+}
+
+function isNativeShell() {
+  try {
+    if (typeof location !== "undefined" && /(?:\?|&)native=1(?:&|$)/.test(location.search)) return true;
+  } catch (e) {}
+  return !!nativeBridge();
+}
+
 const JinriAPI = {
   STORAGE_KEY,
   DATA_VERSION,
@@ -628,6 +649,9 @@ const JinriAPI = {
   setRemindOn,
   nagSlot,
   maybeNag,
+  nativeBridge,
+  nativeSend,
+  isNativeShell,
 };
 
 root.Jinri = JinriAPI;

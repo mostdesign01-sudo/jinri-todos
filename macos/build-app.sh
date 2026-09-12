@@ -8,9 +8,9 @@ WWW="$APP/Contents/Resources/www"
 
 rm -rf "$WWW"
 mkdir -p "$WWW"
-cp "$REPO/overlay.html" "$REPO/overlay.css" "$REPO/styles.css" "$REPO/app.js" "$REPO/icon.svg" "$WWW/"
+cp "$REPO/index.html" "$REPO/overlay.html" "$REPO/overlay.css" "$REPO/styles.css" "$REPO/app.js" "$REPO/icon.svg" "$WWW/"
 mkdir -p "$WWW/icons"
-cp "$REPO"/icons/face3d-*.png "$REPO"/icons/facepx-*.png "$WWW/icons/"
+cp "$REPO"/icons/face3d-*.png "$REPO"/icons/facepx-*.png "$REPO"/icons/icon-192.png "$REPO"/icons/icon-512.png "$WWW/icons/"
 chmod +x "$APP/Contents/MacOS/JinriOverlay" "$ROOT/build-app.sh"
 
 (cd "$ROOT" && rm -f JinriOverlay.zip && zip -qry JinriOverlay.zip JinriOverlay.app -x "*.DS_Store")

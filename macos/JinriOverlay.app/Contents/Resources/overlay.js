@@ -6,8 +6,8 @@ ObjC.import("WebKit");
 ObjC.import("Foundation");
 
 const STORAGE_KEY = "jinri-todos-v1";
-const WIN_W = 420;
-const WIN_H = 680;
+const WIN_W = 520;
+const WIN_H = 820;
 
 // AppKit 常量按数值写，JXA 对宏定义的桥接不稳定。
 const NSBackingStoreBuffered = 2;
@@ -126,8 +126,8 @@ function run(argv) {
     return;
   }
   const wwwDir = root + "/Resources/www/";
-  if (!$.NSFileManager.defaultManager.fileExistsAtPath(wwwDir + "overlay.html")) {
-    showAlert("今日待办", "找不到 overlay.html，请重新解压 zip。");
+  if (!$.NSFileManager.defaultManager.fileExistsAtPath(wwwDir + "index.html")) {
+    showAlert("今日待办", "找不到页面文件，请重新解压 zip。");
     return;
   }
 
@@ -266,7 +266,7 @@ function run(argv) {
   } catch (e) {}
 
   const dirURL = $.NSURL.fileURLWithPathIsDirectory(wwwDir, true);
-  const pageURL = $.NSURL.URLWithStringRelativeToURL("overlay.html?glass=1&native=1", dirURL);
+  const pageURL = $.NSURL.URLWithStringRelativeToURL("index.html?glass=1&native=1", dirURL);
   webview.loadFileURLAllowingReadAccessToURL(pageURL, dirURL);
 
   win.setContentView(webview);
