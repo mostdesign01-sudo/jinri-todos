@@ -1,0 +1,24 @@
+[package]
+name = "jinri-todos-desktop"
+version = "0.1.0"
+description = "今日待办 · Mac 桌面悬浮壳（Tauri 2）"
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+
+[[bin]]
+name = "jinri-todos"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# `macos-private-api` is what makes a transparent NSWindow possible on macOS.
+tauri = { version = "2", features = ["macos-private-api"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

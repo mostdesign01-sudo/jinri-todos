@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "今日待办",
+  "mainBinaryName": "jinri-todos",
+  "version": "0.1.0",
+  "identifier": "com.mostdesign.jinritodos",
+  "build": {
+    "frontendDist": [
+      "../../overlay.html",
+      "../../overlay.css",
+      "../../styles.css",
+      "../../app.js",
+      "../../icon.svg"
+    ]
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "今日待办",
+        "url": "overlay.html",
+        "width": 380,
+        "height": 560,
+        "minWidth": 320,
+        "minHeight": 240,
+        "maxWidth": 480,
+        "resizable": true,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "visibleOnAllWorkspaces": true,
+        "acceptFirstMouse": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "category": "Productivity",
+    "shortDescription": "今日待办 · 桌面悬浮窗",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
+  }
+}
