@@ -51,6 +51,12 @@ assert(aug[0].date === "2026-07-27", "Aug 2026 grid starts Monday Jul 27");
 assert(aug.find((c) => c.date === "2026-08-01" && !c.outside), "Aug 1 inside month");
 assert(aug[aug.length - 1].date === "2026-09-06", "Aug 2026 grid ends Sep 6");
 
+const week = Jinri.weekCells("2026-09-02");
+assert(week.length === 7, "week has 7 days");
+assert(week[0].date === "2026-08-31", "week of Sep 2 2026 starts Monday Aug 31");
+assert(week[2].date === "2026-09-02", "Wednesday is the third cell");
+assert(week[6].date === "2026-09-06", "week ends Sunday");
+
 const feb = Jinri.monthCells(2021, 2);
 assert(feb.length === 35, "Feb 2021 trims empty last row");
 assert(feb[0].date === "2021-02-01", "Feb 2021 starts on Monday");
@@ -114,6 +120,30 @@ seed({
 Jinri.toggleTodo("tog");
 const toggled = Jinri.load().todos[0];
 assert(toggled.done && toggled.date === yesterday && toggled.doneDate === today, "toggle done keeps original date");
+
+assert(Jinri.reminderState({ hour: 10, overdue: 0, open: 2 }).mood === "idle", "daytime unfinished is idle");
+assert(Jinri.reminderState({ hour: 18, overdue: 0, open: 2 }).mood === "dusk", "evening unfinished is dusk");
+assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 1 }).mood === "night", "late unfinished is night");
+assert(Jinri.reminderState({ hour: 10, overdue: 1, open: 1 }).mood === "overdue", "overdue wins over hour");
+assert(Jinri.reminderState({ hour: 22, overdue: 0, open: 0 }).mood === "done", "none left is done");
+assert(Jinri.reminderState({ hour: 18, overdue: 0, open: 2 }).text === "天快晚了", "dusk copy");
+
+reset();
+seed({
+  lastDate: today,
+  todos: [
+    { id: "del-me", title: "误删", priority: "high", done: false, createdAt: 1, date: today },
+    { id: "later", title: "周末计划", priority: "medium", done: false, createdAt: 2, date: tomorrow },
+  ],
+  trash: [],
+});
+Jinri.deleteTodo("del-me");
+assert(!Jinri.load().todos.some((t) => t.id === "del-me"), "delete removes from list");
+assert(Jinri.trashList().some((t) => t.id === "del-me"), "delete keeps trash copy");
+assert(Jinri.upcomingGroups()[0] && Jinri.upcomingGroups()[0].items[0].title === "周末计划", "upcoming groups future tasks");
+Jinri.restoreTodo("del-me");
+assert(Jinri.load().todos.some((t) => t.id === "del-me"), "restore puts task back");
+assert(!Jinri.trashList().some((t) => t.id === "del-me"), "restore leaves trash");
 
 if (failed) {
   console.error("\n" + failed + " failed");
