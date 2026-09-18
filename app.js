@@ -71,6 +71,20 @@ function formatMonthTitle(year, month) {
   return year + "年" + month + "月";
 }
 
+function weekCells(dateStr) {
+  const day = isDateStr(dateStr) ? dateStr : shanghaiDateStr();
+  const dt = dateFromStr(day);
+  const mondayOffset = (dt.getUTCDay() + 6) % 7;
+  const monday = addDays(day, -mondayOffset);
+  const viewMonth = yearMonth(day).m;
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(monday, i);
+    const parts = yearMonth(date);
+    const d = Number(date.slice(-2));
+    return { date, day: d, outside: parts.m !== viewMonth, y: parts.y, m: parts.m };
+  });
+}
+
 function monthCells(year, month) {
   const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
   const mondayOffset = (firstWeekday + 6) % 7;
@@ -357,6 +371,7 @@ const JinriAPI = {
   formatHeaderDate,
   formatShortDate,
   formatMonthTitle,
+  weekCells,
   monthCells,
   load,
   persist,

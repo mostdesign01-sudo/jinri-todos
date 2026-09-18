@@ -93,3 +93,6 @@ body.overlay {
 .widget .check { width: 18px; height: 18px; }
 .widget .list { margin-top: 8px; gap: 5px; }
 .widget .empty { padding: 18px 6px; font-size: 14px; }
+.widget .item.overdue {
+  background: rgba(251, 113, 133, 0.08);
+}
