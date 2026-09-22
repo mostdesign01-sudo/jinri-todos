@@ -63,7 +63,7 @@ desktop/
     ├── Cargo.toml           Rust 包（二进制名 jinri-todos）
     ├── build.rs             根目录网页文件改动时触发重编
     ├── tauri.conf.json      窗口 / 打包配置，frontendDist 指向 ../../overlay.html 等
-    ├── capabilities/        webview 权限（仅 core:default + 拖动窗口）
+    ├── capabilities/        webview 权限（core:default、拖动窗口、allow-set-collapsed / allow-is-collapsed）
     ├── icons/               由根目录 icon.svg 生成的 .icns / .png
     └── src/main.rs          建窗、折叠 / 展开时改原生窗口尺寸、⌥Space、记住位置
 ```
