@@ -1,10 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "M1 overlay window: core defaults plus dragging the window by its handle.",
+  "description": "Main window: core defaults, drag-by-handle, and the collapse commands the webview invokes.",
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    "allow-set-collapsed",
+    "allow-is-collapsed"
   ]
 }

@@ -1,0 +1,110 @@
+/* Desktop-only styles, injected by the Tauri shell. Never loaded on the web. */
+
+html.jinri-collapsed .widget { display: none; }
+
+.capsule { display: none; }
+html.jinri-collapsed .capsule {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  position: fixed;
+  inset: 4px;
+  height: 36px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(10, 12, 18, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  color: var(--ink);
+  font-family: var(--ui);
+  overflow: hidden;
+}
+
+.cap-grip {
+  flex-shrink: 0;
+  width: 22px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+}
+.cap-grip i {
+  display: block;
+  width: 4px;
+  height: 14px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.cap-main {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px 0 2px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: default;
+}
+.cap-main:hover { color: #fff; }
+.cap-main:hover .cap-chevron { border-color: var(--ink); }
+
+.cap-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+.cap-overdue {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--urgent);
+}
+.cap-overdue .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--urgent);
+  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.18);
+}
+.cap-done { color: var(--ok); }
+
+.cap-chevron {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.head-right {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.collapse-btn {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 11px;
+  cursor: default;
+}
+.collapse-btn:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.1);
+}

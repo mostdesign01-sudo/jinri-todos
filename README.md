@@ -52,18 +52,31 @@ msedge --app=https://mostdesign01-sudo.github.io/jinri-todos/overlay.html
 
 ## Mac 桌面壳
 
-`desktop/` 是一个 [Tauri 2](https://v2.tauri.app/) 工程，把仓库根目录现成的 `overlay.html`（连同 `overlay.css`、`styles.css`、`app.js`、`icon.svg`）装进一个无边框、透明、Always on Top 的 Mac 原生窗口。网页和 GitHub Pages 的 PWA 完全不受影响：桌面壳只是把这几个静态文件打进二进制，没有第二份拷贝。
+`desktop/` 是一个 [Tauri 2](https://v2.tauri.app/) 工程，把仓库根目录现成的 `overlay.html`（连同 `overlay.css`、`styles.css`、`app.js`、`icon.svg`）装进一个无边框、透明、Always on Top 的 Mac 原生窗口。网页和 GitHub Pages 的 PWA 完全不受影响：桌面壳只是把这几个静态文件打进二进制，没有第二份拷贝；桌面专用的那点 JS / CSS 在启动时由 Rust 注入 webview，网页端永远不会加载它们。
 
 ```
 desktop/
+├── ui/
+│   ├── desktop.js           桌面专用层：胶囊、「收起」按钮、Esc，镜像 Rust 的折叠状态
+│   └── desktop.css          胶囊与「收起」的样式
 └── src-tauri/
     ├── Cargo.toml           Rust 包（二进制名 jinri-todos）
     ├── build.rs             根目录网页文件改动时触发重编
     ├── tauri.conf.json      窗口 / 打包配置，frontendDist 指向 ../../overlay.html 等
-    ├── capabilities/        webview 权限（仅 core:default + 拖动窗口）
+    ├── capabilities/        webview 权限（core:default、拖动窗口、allow-set-collapsed / allow-is-collapsed）
     ├── icons/               由根目录 icon.svg 生成的 .icns / .png
-    └── src/main.rs          启动 Tauri，无自定义命令
+    └── src/main.rs          建窗、折叠 / 展开时改原生窗口尺寸、⌥Space、记住位置
 ```
+
+### 用法
+
+- **默认是胶囊**：一条 240×44 的小药丸，写着 `今日 · N`；有逾期就多一个红点和 `逾期 · k`；今天和逾期都清空时显示 `都做完了`。左端竖条可以拖动，其余部分点一下展开。
+- **展开**：就是原来的悬浮窗（今天 + 逾期清单、添加栏），窗口本身变成 380×560，可在 320–480 宽之间拉伸；展开时若会超出屏幕边缘，会自动挪回屏幕内。
+- **收起**：按 `Esc`，或点右上角的「收起」。折叠时是**真的把原生窗口缩成 240×44**，不是 CSS 隐藏，所以不会挡住下面的桌面。
+- **⌥Space（Option+空格）**：全局快捷键，在任何 App 里都能切换展开 / 收起；展开后自动聚焦输入框，直接打字回车即可。
+- **记住位置**：拖到哪里，下次启动还在哪里（写在 `~/Library/Application Support/com.mostdesign.jinritodos/.window-state.json`）。
+
+**关于 ⌥Space 的权限**：它用的是 macOS 的 Carbon 热键 API，不需要「辅助功能」或「输入监控」授权。如果按了没反应，通常是被别的 App 占用了（比如 Alfred、Raycast 的默认热键），或者当前输入法把 ⌥Space 吞成了不换行空格。改键在 `desktop/src-tauri/src/main.rs` 顶部的 `TOGGLE_MODIFIERS` / `TOGGLE_KEY`。
 
 ### 依赖
 
@@ -78,7 +91,7 @@ cd desktop
 cargo tauri dev
 ```
 
-首次会拉取并编译 Tauri，之后几秒起窗。窗口 380×560，可在 320–480 宽之间拉伸；顶部那条手柄可以拖动窗口。改了根目录的 `overlay.html` / `app.js` / CSS 之后重新执行 `cargo tauri dev`（M1 是把文件打进二进制，没有热更新）。
+首次会拉取并编译 Tauri，之后几秒起窗，起来就是胶囊。改了根目录的 `overlay.html` / `app.js` / CSS 或 `desktop/ui/` 之后重新执行 `cargo tauri dev`（文件是打进二进制的，没有热更新）。
 
 ### 打包
 
@@ -91,14 +104,14 @@ cargo tauri build
 
 ### 数据
 
-M1 仍用 webview 里的 `localStorage`（键 `jinri-todos-v1`），落在 `~/Library/WebKit/com.mostdesign.jinritodos/`。它与 Safari/Chrome 里打开网页版的数据是**两份互不相通**的，导入导出请先用网页全页版。
+待办仍存在 webview 里的 `localStorage`（键 `jinri-todos-v1`），落在 `~/Library/WebKit/com.mostdesign.jinritodos/`。它与 Safari/Chrome 里打开网页版的数据是**两份互不相通**的，导入导出请先用网页全页版。M3 会迁到本地 JSON。
 
 ### 里程碑
 
-- **M1（本次）**：Tauri 2 脚手架；无边框、透明、置顶、所有桌面空间可见的小窗；装载现有 `overlay.html`；手柄拖动。
-- **M2**：折叠 / 展开成胶囊（点手柄或快捷键在「只剩一条『还有 N 件』」和完整清单间切换，窗口尺寸跟着变）。
+- **M1（已合并）**：Tauri 2 脚手架；无边框、透明、置顶、所有桌面空间可见的小窗；装载现有 `overlay.html`；手柄拖动。
+- **M2（本次）**：默认折叠成胶囊（`今日 · N` / 红点 `逾期 · k` / `都做完了`）；点胶囊展开，`Esc` 或「收起」折叠；折叠时原生窗口真的缩到 240×44；全局 ⌥Space 切换；记住窗口位置。
 - **M3**：数据从 `localStorage` 迁到本地 JSON 文件（Tauri fs 命令读写 `~/Library/Application Support/...`），与网页版可互相导入导出。
-- **暂不做**：全局快捷键、菜单栏托盘、登录时启动、自动更新、签名与公证。
+- **暂不做**：菜单栏托盘、登录时启动、自动更新、签名与公证。
 
 ## 本地打开
 
