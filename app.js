@@ -296,6 +296,96 @@ function taskMarks() {
   return marks;
 }
 
+function rangeDays(start, end) {
+  if (!isDateStr(start) || !isDateStr(end)) return [];
+  let a = start;
+  let b = end;
+  if (b < a) {
+    const tmp = a;
+    a = b;
+    b = tmp;
+  }
+  const out = [];
+  let cur = a;
+  for (let i = 0; i < 62; i++) {
+    out.push(cur);
+    if (cur >= b) break;
+    cur = addDays(cur, 1);
+  }
+  return out;
+}
+
+function presetRange(today, preset) {
+  const day = isDateStr(today) ? today : shanghaiDateStr();
+  if (preset === "3d") return { start: day, end: addDays(day, 2) };
+  if (preset === "1w") return { start: day, end: addDays(day, 6) };
+  if (preset === "2w") return { start: day, end: addDays(day, 13) };
+  if (preset === "weekend") {
+    const wd = dateFromStr(day).getUTCDay();
+    if (wd === 0) return { start: day, end: day };
+    if (wd === 6) return { start: day, end: addDays(day, 1) };
+    const sat = addDays(day, 6 - wd);
+    return { start: sat, end: addDays(sat, 1) };
+  }
+  return { start: day, end: day };
+}
+
+function todosInRange(start, end, includeDone) {
+  const days = rangeDays(start, end);
+  if (!days.length) return [];
+  const set = {};
+  days.forEach((d) => { set[d] = true; });
+  const groups = {};
+  load().todos.forEach((t) => {
+    if (!set[t.date]) return;
+    if (!groups[t.date]) groups[t.date] = [];
+    groups[t.date].push(t);
+  });
+  return Object.keys(groups)
+    .sort()
+    .map((date) => ({ date, todos: sortTodos(groups[date], !!includeDone) }))
+    .filter((g) => g.todos.length);
+}
+
+function rangeSummary(start, end) {
+  const days = rangeDays(start, end);
+  const set = {};
+  days.forEach((d) => { set[d] = true; });
+  let open = 0;
+  let done = 0;
+  if (days.length) {
+    load().todos.forEach((t) => {
+      if (!set[t.date]) return;
+      if (t.done) done += 1;
+      else open += 1;
+    });
+  }
+  return { days: days.length, open, done };
+}
+
+function addTodoRange(title, priority, start, end) {
+  const text = (title || "").trim();
+  if (!text) return 0;
+  const days = rangeDays(start, end);
+  if (!days.length) return 0;
+  const data = load();
+  const pri = PRIORITIES.some((p) => p.id === priority) ? priority : "medium";
+  const base = Date.now();
+  days.forEach((day, i) => {
+    data.todos.push({
+      id: uid(),
+      title: text,
+      priority: pri,
+      done: false,
+      createdAt: base + i,
+      sample: false,
+      date: day,
+    });
+  });
+  persist(data);
+  return days.length;
+}
+
 function addTodo(title, priority, date) {
   const text = (title || "").trim();
   if (!text) return load();
@@ -621,6 +711,11 @@ const JinriAPI = {
   unfinishedOnDate,
   nowUnfinishedCount,
   taskMarks,
+  rangeDays,
+  presetRange,
+  todosInRange,
+  rangeSummary,
+  addTodoRange,
   addTodo,
   toggleTodo,
   deleteTodo,

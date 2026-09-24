@@ -184,6 +184,97 @@ Jinri.restoreTodo("del-me");
 assert(Jinri.load().todos.some((t) => t.id === "del-me"), "restore puts task back");
 assert(!Jinri.trashList().some((t) => t.id === "del-me"), "restore leaves trash");
 
+assert(new Date(Date.UTC(2026, 8, 24)).getUTCDay() === 4, "2026-09-24 is Thursday");
+assert(
+  JSON.stringify(Jinri.rangeDays("2026-09-10", "2026-09-12")) ===
+    JSON.stringify(["2026-09-10", "2026-09-11", "2026-09-12"]),
+  "rangeDays inclusive"
+);
+assert(Jinri.rangeDays("2026-09-12", "2026-09-10")[0] === "2026-09-10", "rangeDays swaps when end is earlier");
+assert(Jinri.rangeDays("2026-09-12", "2026-09-10").length === 3, "rangeDays swapped length");
+assert(Jinri.rangeDays("2026-09-10", "2026-09-10").length === 1, "rangeDays single day");
+assert(Jinri.rangeDays("bad", "2026-09-10").length === 0, "rangeDays rejects invalid dates");
+assert(Jinri.rangeDays("2026-12-30", "2027-01-02").join(",") === "2026-12-30,2026-12-31,2027-01-01,2027-01-02", "rangeDays crosses year");
+const capped = Jinri.rangeDays("2026-01-01", "2026-12-31");
+assert(capped.length === 62, "rangeDays caps at 62");
+assert(capped[0] === "2026-01-01" && capped[61] === Jinri.addDays("2026-01-01", 61), "rangeDays cap keeps the earlier start");
+
+assert(
+  JSON.stringify(Jinri.presetRange("2026-09-24", "weekend")) === JSON.stringify({ start: "2026-09-26", end: "2026-09-27" }),
+  "weekend from Thursday is upcoming Sat–Sun"
+);
+assert(
+  JSON.stringify(Jinri.presetRange("2026-09-26", "weekend")) === JSON.stringify({ start: "2026-09-26", end: "2026-09-27" }),
+  "weekend on Saturday is today through Sunday"
+);
+assert(
+  JSON.stringify(Jinri.presetRange("2026-09-27", "weekend")) === JSON.stringify({ start: "2026-09-27", end: "2026-09-27" }),
+  "weekend on Sunday is today only"
+);
+assert(
+  JSON.stringify(Jinri.presetRange("2026-09-25", "weekend")) === JSON.stringify({ start: "2026-09-26", end: "2026-09-27" }),
+  "weekend on Friday is tomorrow and Sunday"
+);
+assert(
+  JSON.stringify(Jinri.presetRange("2026-09-24", "3d")) === JSON.stringify({ start: "2026-09-24", end: "2026-09-26" }),
+  "3d is today through today+2"
+);
+assert(
+  JSON.stringify(Jinri.presetRange("2026-09-24", "1w")) === JSON.stringify({ start: "2026-09-24", end: "2026-09-30" }),
+  "1w is today through today+6"
+);
+assert(
+  JSON.stringify(Jinri.presetRange("2026-09-24", "2w")) === JSON.stringify({ start: "2026-09-24", end: "2026-10-07" }),
+  "2w is today through today+13"
+);
+
+reset();
+seed({
+  version: 2,
+  lastDate: "2026-09-24",
+  todos: [
+    { id: "a", title: "后一天", priority: "low", done: false, createdAt: 2, date: "2026-09-26" },
+    { id: "b", title: "紧急", priority: "urgent", done: false, createdAt: 1, date: "2026-09-24" },
+    { id: "c", title: "已完成", priority: "medium", done: true, createdAt: 3, date: "2026-09-24" },
+    { id: "d", title: "区间外", priority: "high", done: false, createdAt: 4, date: "2026-09-20" },
+    { id: "e", title: "更后", priority: "low", done: false, createdAt: 5, date: "2026-09-28" },
+  ],
+  trash: [],
+  remind: { on: false, lastNag: "", streak: 0, streakDate: "" },
+});
+const ranged = Jinri.todosInRange("2026-09-24", "2026-09-27", true);
+assert(ranged.length === 2, "todosInRange drops empty days");
+assert(ranged[0].date === "2026-09-24" && ranged[1].date === "2026-09-26", "todosInRange sorts by date");
+assert(ranged[0].todos.map((t) => t.id).join(",") === "b,c", "todosInRange sorts open before done");
+const openRange = Jinri.todosInRange("2026-09-28", "2026-09-24", false);
+assert(openRange.map((g) => g.date).join(",") === "2026-09-24,2026-09-26,2026-09-28", "todosInRange swaps and can hide done");
+assert(openRange.every((g) => g.todos.every((t) => !t.done)), "includeDone false drops completed");
+const onlyDoneDay = Jinri.todosInRange("2026-09-24", "2026-09-24", false);
+assert(onlyDoneDay.length === 1 && onlyDoneDay[0].todos.length === 1 && onlyDoneDay[0].todos[0].id === "b", "a mixed day keeps open todos");
+const summary = Jinri.rangeSummary("2026-09-24", "2026-09-26");
+assert(summary.days === 3 && summary.open === 2 && summary.done === 1, "rangeSummary counts days, open, done");
+assert(Jinri.rangeSummary("nope", "2026-09-01").days === 0, "rangeSummary on invalid range is empty");
+
+reset();
+Jinri.addTodo("同形", "low", "2026-09-01");
+const single = Jinri.load().todos.find((t) => t.title === "同形");
+reset();
+const addedN = Jinri.addTodoRange("同形", "low", "2026-09-01", "2026-09-01");
+const rangedOne = Jinri.load().todos.find((t) => t.title === "同形");
+assert(addedN === 1, "addTodoRange single day returns 1");
+assert(Object.keys(rangedOne).sort().join(",") === Object.keys(single).sort().join(","), "addTodoRange uses addTodo keys");
+assert(rangedOne.done === false && rangedOne.sample === false && rangedOne.priority === "low" && rangedOne.date === "2026-09-01", "addTodoRange matches addTodo shape");
+const beforeBlank = Jinri.load().todos.length;
+assert(Jinri.addTodoRange("   ", "high", "2026-09-01", "2026-09-03") === 0, "blank title adds nothing");
+assert(Jinri.load().todos.length === beforeBlank, "blank title does not append");
+assert(Jinri.addTodoRange("倒序", "nope", "2026-09-03", "2026-09-01") === 3, "addTodoRange swaps and defaults priority");
+const flipped = Jinri.load().todos.filter((t) => t.title === "倒序");
+assert(flipped.map((t) => t.date).join(",") === "2026-09-01,2026-09-02,2026-09-03", "swapped days each get one todo");
+assert(flipped.every((t) => t.priority === "medium" && t.done === false && t.sample === false), "invalid priority becomes medium");
+reset();
+assert(Jinri.addTodoRange("长区间", "high", "2026-01-01", "2026-06-01") === 62, "addTodoRange caps at 62 days");
+assert(Jinri.load().todos.filter((t) => t.title === "长区间").length === 62, "capped range persists once as 62 todos");
+
 if (failed) {
   console.error("\n" + failed + " failed");
   process.exit(1);
