@@ -68,6 +68,21 @@
     </header>
 
     <section class="cal-panel glass" id="cal-panel">
+      <div class="cal-tools">
+        <button type="button" class="range-toggle" id="range-toggle" aria-pressed="false">区间</button>
+        <span class="range-badge" id="range-badge" hidden></span>
+      </div>
+      <div class="range-tabs" id="range-tabs" data-active="start" hidden>
+        <button type="button" class="range-tab on" data-pick="start" aria-selected="true">
+          <span class="k">开始</span>
+          <span class="v" id="range-start-label">选择日期</span>
+        </button>
+        <button type="button" class="range-tab" data-pick="end" aria-selected="false">
+          <span class="k">结束</span>
+          <span class="v" id="range-end-label">选择日期</span>
+        </button>
+        <span class="range-underline" aria-hidden="true"></span>
+      </div>
       <div class="cal-head" id="cal-head">
         <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="上个月">‹</button>
         <button type="button" class="cal-title" id="cal-title"></button>
@@ -75,6 +90,20 @@
       </div>
       <div class="cal-dows" id="cal-dows"></div>
       <div class="cal-grid" id="cal-grid"></div>
+      <div class="range-presets" id="range-presets" hidden>
+        <button type="button" class="range-chip" data-preset="weekend">本周末</button>
+        <button type="button" class="range-chip" data-preset="3d">3天</button>
+        <button type="button" class="range-chip" data-preset="1w">1周</button>
+        <button type="button" class="range-chip" data-preset="2w">2周</button>
+        <button type="button" class="range-chip" data-preset="clear">清除</button>
+      </div>
+      <div class="range-body" id="range-body" hidden>
+        <div class="range-list" id="range-list"></div>
+        <form class="range-add" id="range-add" autocomplete="off">
+          <input id="range-input" maxlength="120" enterkeyhint="done" placeholder="在这 1 天每天添加…" aria-label="在区间内每天添加" />
+          <button type="submit" class="btn">添加</button>
+        </form>
+      </div>
     </section>
 
     <section class="panel glass">
@@ -147,6 +176,13 @@
     let viewDate = Jinri.isDateStr(savedView) ? savedView : Jinri.shanghaiDateStr();
     let cal = Jinri.yearMonth(viewDate);
     let calOpen = sessionStorage.getItem("jinri-cal-open") === "1";
+    let rangeOn = false;
+    let rangeStart = "";
+    let rangeEnd = "";
+    let rangePick = "start";
+    let rangePreset = "";
+    let hoverDate = "";
+    let markCache = {};
     let trashOpen = false;
     let lastUndo = null;
     let toastTimer = 0;
@@ -195,30 +231,254 @@
 
     function dayButton(cell, today, marks) {
       const mark = marks[cell.date];
+      const selected = !rangeOn && cell.date === viewDate;
       const cls = [
         "cal-day",
         cell.outside ? "out" : "",
         cell.date === today ? "today" : "",
-        cell.date === viewDate ? "sel" : "",
+        cell.date < today ? "past" : "",
+        selected ? "sel" : "",
       ].filter(Boolean).join(" ");
       let markHtml = `<span class="cal-mark" aria-hidden="true"></span>`;
       if (mark) {
         const n = mark.open || mark.total;
         markHtml = `<span class="cal-mark on${mark.open ? " open" : ""}">${n > 1 ? n : ""}</span>`;
       }
-      return `<button type="button" class="${cls}" data-date="${cell.date}" aria-label="${cell.date}" aria-current="${cell.date === viewDate ? "date" : "false"}"><span class="cal-num">${cell.day}</span>${markHtml}</button>`;
+      const dot = cell.date === today ? `<i class="cal-today-dot" aria-hidden="true"></i>` : "";
+      return `<button type="button" class="${cls}" data-date="${cell.date}" aria-label="${cell.date}" aria-current="${selected ? "date" : "false"}"><span class="cal-num">${cell.day}</span>${dot}${markHtml}</button>`;
+    }
+
+    function canPointerHover() {
+      return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    }
+
+    function visibleRange() {
+      if (!rangeOn || !Jinri.isDateStr(rangeStart)) return null;
+      let end = rangeEnd;
+      let preview = false;
+      if (hoverDate && Jinri.isDateStr(hoverDate) && canPointerHover()) {
+        end = hoverDate;
+        preview = hoverDate !== rangeEnd || !rangeEnd;
+      }
+      if (!Jinri.isDateStr(end)) {
+        return { start: rangeStart, end: rangeStart, days: [rangeStart], preview: false, single: true };
+      }
+      const days = Jinri.rangeDays(rangeStart, end);
+      if (!days.length) return null;
+      return { start: days[0], end: days[days.length - 1], days, preview, single: days.length === 1 };
+    }
+
+    function summaryCached(start, end) {
+      const days = Jinri.rangeDays(start, end);
+      let open = 0;
+      days.forEach((d) => {
+        const mark = markCache[d];
+        if (mark) open += mark.open;
+      });
+      return { days: days.length, open };
+    }
+
+    function applyRangeVisuals() {
+      const panel = document.getElementById("cal-panel");
+      const vr = visibleRange();
+      panel.classList.toggle("range-on", rangeOn);
+      if (rangeOn && rangePreset) panel.dataset.preset = rangePreset;
+      else delete panel.dataset.preset;
+      const badge = document.getElementById("range-badge");
+      if (!vr) {
+        badge.hidden = true;
+        badge.textContent = "";
+      } else {
+        const sum = summaryCached(vr.start, vr.end);
+        badge.hidden = false;
+        badge.textContent = sum.days + " 天 · " + sum.open + " 项未完成";
+      }
+      const set = vr ? new Set(vr.days) : null;
+      document.querySelectorAll(".cal-week").forEach((row) => {
+        const band = row.querySelector(".cal-band");
+        const days = Array.from(row.querySelectorAll(".cal-day"));
+        days.forEach((btn) => btn.classList.remove("in-range", "endpoint", "is-start", "is-end"));
+        if (!vr) {
+          band.hidden = true;
+          band.classList.remove("is-on", "preview", "round-l", "round-r");
+          return;
+        }
+        let first = -1;
+        let last = -1;
+        days.forEach((btn, i) => {
+          const date = btn.dataset.date;
+          if (!set.has(date)) return;
+          if (first < 0) first = i;
+          last = i;
+          btn.classList.add("in-range");
+          if (date === vr.start) btn.classList.add("endpoint", "is-start");
+          if (date === vr.end) btn.classList.add("endpoint", "is-end");
+        });
+        if (first < 0 || vr.single) {
+          band.hidden = true;
+          band.classList.remove("is-on", "preview");
+          return;
+        }
+        const wasHidden = band.hidden;
+        band.hidden = false;
+        band.classList.toggle("preview", !!vr.preview);
+        band.classList.toggle("round-l", first === 0 || days[first].dataset.date === vr.start);
+        band.classList.toggle("round-r", last === 6 || days[last].dataset.date === vr.end);
+        band.style.setProperty("--from", String(first));
+        band.style.setProperty("--to", String(last));
+        if (wasHidden) {
+          band.classList.remove("is-on");
+          void band.offsetWidth;
+          band.classList.add("is-on");
+        }
+      });
+    }
+
+    function renderRangeList() {
+      const groups = Jinri.todosInRange(rangeStart, rangeEnd, true);
+      const box = document.getElementById("range-list");
+      if (!groups.length) {
+        box.innerHTML = `<div class="empty range-empty">这几天还没有待办</div>`;
+        return;
+      }
+      let html = "";
+      groups.forEach((group) => {
+        html += `<button type="button" class="sec-date" data-jump="${group.date}">${Jinri.formatShortDate(group.date)}</button>`;
+        html += group.todos.map((t) => itemHtml(t, false)).join("");
+      });
+      box.innerHTML = html;
+    }
+
+    function renderRangeChrome() {
+      const toggle = document.getElementById("range-toggle");
+      toggle.classList.toggle("on", rangeOn);
+      toggle.setAttribute("aria-pressed", rangeOn ? "true" : "false");
+      const tabs = document.getElementById("range-tabs");
+      tabs.hidden = !rangeOn;
+      document.getElementById("range-presets").hidden = !rangeOn;
+      const complete = !!(rangeOn && rangeStart && rangeEnd);
+      document.getElementById("range-body").hidden = !complete;
+      const active = rangePick === "end" ? "end" : "start";
+      tabs.dataset.active = active;
+      tabs.querySelectorAll(".range-tab").forEach((tab) => {
+        const on = tab.dataset.pick === active;
+        tab.classList.toggle("on", on);
+        tab.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      const startLabel = document.getElementById("range-start-label");
+      const endLabel = document.getElementById("range-end-label");
+      startLabel.textContent = rangeStart ? Jinri.formatShortDate(rangeStart) : "选择日期";
+      endLabel.textContent = rangeEnd ? Jinri.formatShortDate(rangeEnd) : "选择日期";
+      startLabel.classList.toggle("is-set", !!rangeStart);
+      endLabel.classList.toggle("is-set", !!rangeEnd);
+      document.querySelectorAll(".range-chip").forEach((chip) => {
+        chip.classList.toggle("on", !!rangePreset && chip.dataset.preset === rangePreset);
+      });
+      if (complete) {
+        const n = Jinri.rangeDays(rangeStart, rangeEnd).length;
+        document.getElementById("range-input").placeholder = "在这 " + n + " 天每天添加…";
+        renderRangeList();
+      }
     }
 
     function renderCalendar() {
       const today = Jinri.shanghaiDateStr();
-      const marks = Jinri.taskMarks();
+      markCache = Jinri.taskMarks();
       document.getElementById("cal-head").hidden = !calOpen;
       document.getElementById("cal-title").textContent = Jinri.formatMonthTitle(cal.y, cal.m);
       document.getElementById("cal-dows").innerHTML = WEEKDAYS.map((w) => `<div class="cal-dow">${w}</div>`).join("");
       const cells = calOpen ? Jinri.monthCells(cal.y, cal.m) : Jinri.weekCells(viewDate);
       const grid = document.getElementById("cal-grid");
       grid.classList.toggle("week", !calOpen);
-      grid.innerHTML = cells.map((cell) => dayButton(cell, today, marks)).join("");
+      let html = "";
+      for (let i = 0; i < cells.length; i += 7) {
+        const slice = cells.slice(i, i + 7);
+        html += `<div class="cal-week"><div class="cal-band" hidden></div>${slice.map((cell) => dayButton(cell, today, markCache)).join("")}</div>`;
+      }
+      grid.innerHTML = html;
+      applyRangeVisuals();
+    }
+
+    function pickRangeDate(date) {
+      if (!Jinri.isDateStr(date)) return;
+      hoverDate = "";
+      rangePreset = "";
+      if (!rangeStart || rangePick === "start") {
+        rangeStart = date;
+        if (rangeEnd && rangeEnd < rangeStart) rangeEnd = "";
+        rangePick = "end";
+      } else {
+        let end = date;
+        let start = rangeStart;
+        if (end < start) {
+          const tmp = end;
+          end = start;
+          start = tmp;
+        }
+        const days = Jinri.rangeDays(start, end);
+        rangeStart = days[0] || start;
+        rangeEnd = days[days.length - 1] || end;
+        rangePick = "end";
+      }
+      viewDate = rangeStart || date;
+      cal = Jinri.yearMonth(viewDate);
+      sessionStorage.setItem("jinri-view-date", viewDate);
+      render();
+    }
+
+    function applyPreset(preset) {
+      const span = Jinri.presetRange(Jinri.shanghaiDateStr(), preset);
+      rangeOn = true;
+      calOpen = true;
+      sessionStorage.setItem("jinri-cal-open", "1");
+      rangeStart = span.start;
+      rangeEnd = span.end;
+      rangePreset = preset;
+      rangePick = "end";
+      hoverDate = "";
+      viewDate = span.start;
+      cal = Jinri.yearMonth(span.start);
+      sessionStorage.setItem("jinri-view-date", viewDate);
+      render();
+    }
+
+    function clearRange() {
+      rangeStart = "";
+      rangeEnd = "";
+      rangePreset = "";
+      rangePick = "start";
+      hoverDate = "";
+      render();
+    }
+
+    function initRangeFromUrl() {
+      let query = "";
+      try { query = new URLSearchParams(location.search).get("range") || ""; } catch (e) { return; }
+      if (!query) return;
+      if (query === "weekend" || query === "3d" || query === "1w" || query === "2w") {
+        const span = Jinri.presetRange(Jinri.shanghaiDateStr(), query);
+        rangeOn = true;
+        calOpen = true;
+        rangeStart = span.start;
+        rangeEnd = span.end;
+        rangePreset = query;
+        rangePick = "end";
+        viewDate = span.start;
+        cal = Jinri.yearMonth(span.start);
+        return;
+      }
+      const match = query.match(/^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/);
+      if (!match || !Jinri.isDateStr(match[1]) || !Jinri.isDateStr(match[2])) return;
+      const days = Jinri.rangeDays(match[1], match[2]);
+      if (!days.length) return;
+      rangeOn = true;
+      calOpen = true;
+      rangeStart = days[0];
+      rangeEnd = days[days.length - 1];
+      rangePreset = "";
+      rangePick = "end";
+      viewDate = rangeStart;
+      cal = Jinri.yearMonth(rangeStart);
     }
 
     function render() {
@@ -240,6 +500,7 @@
         addPriority = p;
         render();
       });
+      renderRangeChrome();
       renderCalendar();
 
       const dayItems = Jinri.todosOnDate(viewDate, true);
@@ -468,7 +729,50 @@
     }, { passive: true });
     document.getElementById("cal-grid").addEventListener("click", (e) => {
       const btn = e.target.closest("[data-date]");
-      if (btn) selectDate(btn.dataset.date);
+      if (!btn) return;
+      if (rangeOn) pickRangeDate(btn.dataset.date);
+      else selectDate(btn.dataset.date);
+    });
+    document.getElementById("cal-grid").addEventListener("pointerover", (e) => {
+      if (!rangeOn || !rangeStart || !canPointerHover()) return;
+      const btn = e.target.closest("[data-date]");
+      if (!btn || btn.dataset.date === hoverDate) return;
+      hoverDate = btn.dataset.date;
+      applyRangeVisuals();
+    });
+    document.getElementById("cal-grid").addEventListener("pointerleave", () => {
+      if (!hoverDate) return;
+      hoverDate = "";
+      applyRangeVisuals();
+    });
+    document.getElementById("range-toggle").addEventListener("click", () => {
+      rangeOn = !rangeOn;
+      hoverDate = "";
+      if (rangeOn) {
+        calOpen = true;
+        sessionStorage.setItem("jinri-cal-open", "1");
+      }
+      render();
+    });
+    document.getElementById("range-tabs").addEventListener("click", (e) => {
+      const tab = e.target.closest("[data-pick]");
+      if (!tab) return;
+      rangePick = tab.dataset.pick === "end" ? "end" : "start";
+      render();
+    });
+    document.getElementById("range-presets").addEventListener("click", (e) => {
+      const chip = e.target.closest("[data-preset]");
+      if (!chip) return;
+      if (chip.dataset.preset === "clear") clearRange();
+      else applyPreset(chip.dataset.preset);
+    });
+    document.getElementById("range-add").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("range-input");
+      const n = Jinri.addTodoRange(input.value, addPriority, rangeStart, rangeEnd);
+      if (!n) return;
+      input.value = "";
+      render();
     });
 
     document.getElementById("add-form").addEventListener("submit", (e) => {
@@ -479,7 +783,7 @@
       render();
     });
 
-    document.getElementById("list").addEventListener("click", (e) => {
+    function onItemClick(e) {
       const jump = e.target.closest("[data-jump]");
       if (jump) { selectDate(jump.dataset.jump); return; }
       const item = e.target.closest(".item");
@@ -498,7 +802,9 @@
         showUndo("delete", item.dataset.id, "已删除「" + title + "」");
         render();
       }
-    });
+    }
+    document.getElementById("list").addEventListener("click", onItemClick);
+    document.getElementById("range-list").addEventListener("click", onItemClick);
     document.getElementById("trash-box").addEventListener("click", (e) => {
       const item = e.target.closest(".item");
       if (!item) return;
@@ -516,19 +822,23 @@
     document.getElementById("toast").addEventListener("mouseenter", () => clearTimeout(toastTimer));
     document.getElementById("toast").addEventListener("mouseleave", armToast);
 
-    document.getElementById("list").addEventListener("change", (e) => {
+    function onTitleChange(e) {
       if (!e.target.classList.contains("title")) return;
       const item = e.target.closest(".item");
+      if (!item) return;
       Jinri.editTitle(item.dataset.id, e.target.value);
       render();
-    });
-
-    document.getElementById("list").addEventListener("keydown", (e) => {
+    }
+    function onTitleKey(e) {
       if (e.target.classList.contains("title") && e.key === "Enter") {
         e.preventDefault();
         e.target.blur();
       }
-    });
+    }
+    document.getElementById("list").addEventListener("change", onTitleChange);
+    document.getElementById("range-list").addEventListener("change", onTitleChange);
+    document.getElementById("list").addEventListener("keydown", onTitleKey);
+    document.getElementById("range-list").addEventListener("keydown", onTitleKey);
 
     document.getElementById("clear-samples").addEventListener("click", () => {
       Jinri.clearSamples();
@@ -752,6 +1062,7 @@
     window.addEventListener("storage", (e) => {
       if (e.key === Jinri.STORAGE_KEY) render();
     });
+    initRangeFromUrl();
     render();
     setInterval(renderLantern, 60000);
     document.addEventListener("visibilitychange", () => {
